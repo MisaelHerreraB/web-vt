@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface User {
   id: string;
@@ -86,7 +87,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   loadUsers() {
-    this.http.get<User[]>('http://localhost:3000/users').subscribe({
+    this.http.get<User[]>(`${environment.apiUrl}/users`).subscribe({
       next: (data) => {
         this.users = data;
         this.cdr.detectChanges();
@@ -97,7 +98,7 @@ export class UserManagementComponent implements OnInit {
 
   toggleStatus(user: User) {
     if (confirm(`Are you sure you want to ${user.isActive ? 'deactivate' : 'activate'} ${user.fullName}?`)) {
-      this.http.patch(`http://localhost:3000/users/${user.id}/toggle`, {}).subscribe({
+      this.http.patch(`${environment.apiUrl}/users/${user.id}/toggle`, {}).subscribe({
         next: () => this.loadUsers(),
         error: (err) => console.error('Error toggling status:', err)
       });
@@ -106,7 +107,7 @@ export class UserManagementComponent implements OnInit {
 
   deleteUser(user: User) {
     if (confirm(`Are you sure you want to DELETE user ${user.fullName}? This action cannot be undone.`)) {
-      this.http.delete(`http://localhost:3000/users/${user.id}`).subscribe({
+      this.http.delete(`${environment.apiUrl}/users/${user.id}`).subscribe({
         next: () => this.loadUsers(),
         error: (err) => console.error('Error deleting user:', err)
       });

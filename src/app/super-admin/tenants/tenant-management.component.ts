@@ -8,6 +8,7 @@ import { PlanService, Plan } from '../../services/plan.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { TenantService, CreateFullTenantDto } from '../../services/tenant.service';
 import { CURRENCIES, Currency } from '../../constants/currencies';
+import { environment } from '../../../environments/environment';
 
 interface Tenant {
   id: string;
@@ -238,7 +239,7 @@ export class TenantManagementComponent implements OnInit {
   }
 
   loadTenants() {
-    this.http.get<Tenant[]>('http://localhost:3000/tenants').subscribe({
+    this.http.get<Tenant[]>(`${environment.apiUrl}/tenants`).subscribe({
       next: (data) => {
         this.tenants = data;
         this.cdr.detectChanges();
@@ -302,7 +303,7 @@ export class TenantManagementComponent implements OnInit {
 
   toggleStatus(tenant: Tenant) {
     if (confirm(`Are you sure you want to ${tenant.isActive ? 'deactivate' : 'activate'} ${tenant.name}?`)) {
-      this.http.patch(`http://localhost:3000/tenants/${tenant.id}/toggle`, {}).subscribe({
+      this.http.patch(`${environment.apiUrl}/tenants/${tenant.id}/toggle`, {}).subscribe({
         next: () => this.loadTenants(),
         error: (err) => console.error('Error toggling status:', err)
       });
@@ -311,7 +312,7 @@ export class TenantManagementComponent implements OnInit {
 
   deleteTenant(tenant: Tenant) {
     if (confirm(`Are you sure you want to DELETE ${tenant.name}? This action cannot be undone.`)) {
-      this.http.delete(`http://localhost:3000/tenants/${tenant.id}`).subscribe({
+      this.http.delete(`${environment.apiUrl}/tenants/${tenant.id}`).subscribe({
         next: () => this.loadTenants(),
         error: (err) => console.error('Error deleting tenant:', err)
       });

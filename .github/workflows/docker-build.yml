@@ -34,3 +34,7 @@ jobs:
       
       - name: Image digest
         run: echo "Image pushed successfully!"
+      
+      - name: Trigger Coolify Deploy
+        run: |
+          curl -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}"
