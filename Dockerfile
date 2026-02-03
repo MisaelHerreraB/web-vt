@@ -16,7 +16,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (including devDependencies for build)
-RUN npm ci --silent
+RUN npm ci --legacy-peer-deps --silent
 
 # Copy source code
 COPY . .
@@ -47,7 +47,7 @@ COPY --chown=node:node package*.json ./
 
 # Install only production dependencies
 # Angular SSR needs some dependencies at runtime (express, @angular/ssr, etc.)
-RUN npm ci --production --silent
+RUN npm ci --production --legacy-peer-deps --silent
 
 # Copy built application from builder stage
 # Angular 17+ SSR structure: dist/web/browser and dist/web/server
