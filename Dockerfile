@@ -64,7 +64,7 @@ ENV NODE_ENV=production
 # These can be passed when running the container:
 # - API_URL: Backend API URL
 # - Any other custom environment variables
-ENV API_URL=http://localhost:3000
+ENV API_URL=https://api.vertienda.app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface Tenant {
     id: string;
@@ -57,7 +58,7 @@ export interface CreateFullTenantDto {
     providedIn: 'root'
 })
 export class TenantService {
-    private apiUrl = 'http://localhost:3000';
+    private apiUrl = environment.apiUrl;
     tenant = signal<Tenant | null>(null);
 
     constructor(private http: HttpClient) { }

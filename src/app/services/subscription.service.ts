@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Plan } from './plan.service';
 
 export interface Subscription {
@@ -32,7 +33,7 @@ export interface ChangePlanDto {
     providedIn: 'root'
 })
 export class SubscriptionService {
-    private apiUrl = 'http://localhost:3000/subscriptions';
+    private apiUrl = `${environment.apiUrl}/subscriptions`;
 
     constructor(private http: HttpClient) { }
 

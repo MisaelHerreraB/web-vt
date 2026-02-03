@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 interface UserData {
     email: string;
@@ -16,7 +17,7 @@ interface UserData {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:3000/auth';
+    private apiUrl = `${environment.apiUrl}/auth`;
     private tokenKey = 'access_token';
     private userDataKey = 'user_data';
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
