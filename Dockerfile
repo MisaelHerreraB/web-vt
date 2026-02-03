@@ -73,5 +73,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
 # Use dumb-init to properly handle signals
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the SSR server
+# Start the SSR server - 
 CMD ["node", "dist/web/server/server.mjs"]
