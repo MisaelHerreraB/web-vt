@@ -1,8 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG } from '../config/runtime-config';
 
 export interface Tenant {
     id: string;
@@ -58,7 +58,7 @@ export interface CreateFullTenantDto {
     providedIn: 'root'
 })
 export class TenantService {
-    private apiUrl = environment.apiUrl;
+    private apiUrl = inject(RUNTIME_CONFIG).apiUrl;
     tenant = signal<Tenant | null>(null);
 
     constructor(private http: HttpClient) { }

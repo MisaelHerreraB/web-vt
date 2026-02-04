@@ -7,6 +7,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { RECAPTCHA_V3_SITE_KEY, RecaptchaV3Module } from 'ng-recaptcha';
 import { environment } from '../environments/environment';
+import { RUNTIME_CONFIG, provideRuntimeConfig } from './config/runtime-config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideClientHydration(withEventReplay()),
     { provide: RECAPTCHA_V3_SITE_KEY, useValue: environment.recaptchaSiteKey },
+    { provide: RUNTIME_CONFIG, useFactory: provideRuntimeConfig },
     importProvidersFrom(RecaptchaV3Module)
   ]
 };

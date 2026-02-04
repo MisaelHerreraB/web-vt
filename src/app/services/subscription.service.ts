@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG } from '../config/runtime-config';
 import { Plan } from './plan.service';
 
 export interface Subscription {
@@ -33,7 +33,7 @@ export interface ChangePlanDto {
     providedIn: 'root'
 })
 export class SubscriptionService {
-    private apiUrl = `${environment.apiUrl}/subscriptions`;
+    private apiUrl = `${inject(RUNTIME_CONFIG).apiUrl}/subscriptions`;
 
     constructor(private http: HttpClient) { }
 

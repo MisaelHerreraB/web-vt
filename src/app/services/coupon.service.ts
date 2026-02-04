@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG } from '../config/runtime-config';
 import { TenantService } from './tenant.service';
 
 export enum CouponType {
@@ -39,7 +39,7 @@ export interface CouponValidationResult {
 export class CouponService {
     private http = inject(HttpClient);
     private tenantService = inject(TenantService);
-    private apiUrl = `${environment.apiUrl}/coupons`;
+    private apiUrl = `${inject(RUNTIME_CONFIG).apiUrl}/coupons`;
 
     appliedCoupon = signal<CouponValidationResult | null>(null);
 

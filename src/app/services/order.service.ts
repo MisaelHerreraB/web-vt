@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG } from '../config/runtime-config';
 import { TenantService } from './tenant.service';
 
 export interface OrderItemDto {
@@ -33,7 +33,7 @@ export interface CreateOrderDto {
 export class OrderService {
     private http = inject(HttpClient);
     private tenantService = inject(TenantService);
-    private apiUrl = `${environment.apiUrl}/orders`;
+    private apiUrl = `${inject(RUNTIME_CONFIG).apiUrl}/orders`;
 
     private getHeaders() {
         const tenant = this.tenantService.tenant();

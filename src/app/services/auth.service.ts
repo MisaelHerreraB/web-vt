@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG, RuntimeConfig } from '../config/runtime-config';
 
 interface UserData {
     email: string;
@@ -17,7 +17,7 @@ interface UserData {
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = `${environment.apiUrl}/auth`;
+    private apiUrl: string;
     private tokenKey = 'access_token';
     private userDataKey = 'user_data';
     private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
@@ -25,8 +25,11 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private router: Router,
-        @Inject(PLATFORM_ID) private platformId: Object
-    ) { }
+        @Inject(PLATFORM_ID) private platformId: Object,
+        @Inject(RUNTIME_CONFIG) private config: RuntimeConfig
+    ) {
+        this.apiUrl = `${this.config.apiUrl}/auth`;
+    }
 
     login(credential: any): Observable<any> {
         return this.http.post<{ access_token: string }>(`${this.apiUrl}/login`, credential).pipe(

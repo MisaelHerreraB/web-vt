@@ -1,9 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { environment } from '../../../environments/environment';
+import { RUNTIME_CONFIG } from '../../config/runtime-config';
 
 interface User {
   id: string;
@@ -75,6 +75,7 @@ interface User {
 })
 export class UserManagementComponent implements OnInit {
   users: User[] = [];
+  private apiUrl = inject(RUNTIME_CONFIG).apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -87,7 +88,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   loadUsers() {
-    this.http.get<User[]>(`${environment.apiUrl}/users`).subscribe({
+    this.http.get<User[]>(`${this.apiUrl}/users`).subscribe({
       next: (data) => {
         this.users = data;
         this.cdr.detectChanges();
@@ -98,7 +99,7 @@ export class UserManagementComponent implements OnInit {
 
   toggleStatus(user: User) {
     if (confirm(`Are you sure you want to ${user.isActive ? 'deactivate' : 'activate'} ${user.fullName}?`)) {
-      this.http.patch(`${environment.apiUrl}/users/${user.id}/toggle`, {}).subscribe({
+      this.http.patch(`${this.apiUrl}/users/${user.id}/toggle`, {}).subscribe({
         next: () => this.loadUsers(),
         error: (err) => console.error('Error toggling status:', err)
       });
@@ -107,7 +108,7 @@ export class UserManagementComponent implements OnInit {
 
   deleteUser(user: User) {
     if (confirm(`Are you sure you want to DELETE user ${user.fullName}? This action cannot be undone.`)) {
-      this.http.delete(`${environment.apiUrl}/users/${user.id}`).subscribe({
+      this.http.delete(`${this.apiUrl}/users/${user.id}`).subscribe({
         next: () => this.loadUsers(),
         error: (err) => console.error('Error deleting user:', err)
       });

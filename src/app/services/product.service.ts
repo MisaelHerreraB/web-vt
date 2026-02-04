@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { RUNTIME_CONFIG } from '../config/runtime-config';
 import { tap } from 'rxjs/operators';
 import { TenantService } from './tenant.service';
 
@@ -48,7 +48,7 @@ export interface Product {
 export class ProductService {
     private http = inject(HttpClient);
     private tenantService = inject(TenantService);
-    private apiUrl = environment.apiUrl;
+    private apiUrl = inject(RUNTIME_CONFIG).apiUrl;
 
     // Simple in-memory cache: key -> { timestamp, data }
     private productsCache = new Map<string, { timestamp: number, data: Product[] }>();

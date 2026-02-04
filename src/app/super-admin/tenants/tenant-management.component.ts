@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +8,7 @@ import { PlanService, Plan } from '../../services/plan.service';
 import { SubscriptionService } from '../../services/subscription.service';
 import { TenantService, CreateFullTenantDto } from '../../services/tenant.service';
 import { CURRENCIES, Currency } from '../../constants/currencies';
-import { environment } from '../../../environments/environment';
+import { RUNTIME_CONFIG } from '../../config/runtime-config';
 
 interface Tenant {
   id: string;
@@ -200,6 +200,7 @@ interface Tenant {
 export class TenantManagementComponent implements OnInit {
   tenants: Tenant[] = [];
   userEmail = '';
+  private apiUrl = inject(RUNTIME_CONFIG).apiUrl;
 
   // Modal state
   showChangePlanModal = false;
@@ -239,7 +240,7 @@ export class TenantManagementComponent implements OnInit {
   }
 
   loadTenants() {
-    this.http.get<Tenant[]>(`${environment.apiUrl}/tenants`).subscribe({
+    this.http.get<Tenant[]>(`${this.apiUrl}/tenants`).subscribe({
       next: (data) => {
         this.tenants = data;
         this.cdr.detectChanges();
@@ -303,7 +304,7 @@ export class TenantManagementComponent implements OnInit {
 
   toggleStatus(tenant: Tenant) {
     if (confirm(`Are you sure you want to ${tenant.isActive ? 'deactivate' : 'activate'} ${tenant.name}?`)) {
-      this.http.patch(`${environment.apiUrl}/tenants/${tenant.id}/toggle`, {}).subscribe({
+      this.http.patch(`${this.apiUrl}/tenants/${tenant.id}/toggle`, {}).subscribe({
         next: () => this.loadTenants(),
         error: (err) => console.error('Error toggling status:', err)
       });
@@ -312,7 +313,7 @@ export class TenantManagementComponent implements OnInit {
 
   deleteTenant(tenant: Tenant) {
     if (confirm(`Are you sure you want to DELETE ${tenant.name}? This action cannot be undone.`)) {
-      this.http.delete(`${environment.apiUrl}/tenants/${tenant.id}`).subscribe({
+      this.http.delete(`${this.apiUrl}/tenants/${tenant.id}`).subscribe({
         next: () => this.loadTenants(),
         error: (err) => console.error('Error deleting tenant:', err)
       });
