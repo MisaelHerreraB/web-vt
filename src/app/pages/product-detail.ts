@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService, Product, ProductVariant } from '../services/product.service';
@@ -425,8 +425,14 @@ export class ProductDetailComponent implements OnInit {
   private productService = inject(ProductService);
   private tenantService = inject(TenantService);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
 
   ngOnInit() {
+    // Scroll to top when component loads (only in browser)
+    if (isPlatformBrowser(this.platformId)) {
+      window.scrollTo(0, 0);
+    }
+
     if (this.slug && this.productId) {
       // 1. Load Tenant First to ensure headers are available
       this.tenantService.getTenant(this.slug).subscribe({
