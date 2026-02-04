@@ -282,23 +282,57 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                                 <button (click)="increaseQuantity()" class="w-8 h-full flex items-center justify-center text-gray-500 hover:text-black">+</button>
                              </div>
                              
-                             @if (product.stock && product.stock > 0) {
-                                <span class="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">Disponible</span>
+                             <!-- Stock Status Badge (UX Best Practice) -->
+                             @if (currentStock > 0) {
+                                <span class="text-xs text-green-700 font-bold bg-green-100 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Disponible
+                                </span>
+                             } @else {
+                                <span class="text-xs text-red-700 font-bold bg-red-100 px-3 py-1.5 rounded-full border border-red-200 flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    Agotado
+                                </span>
                              }
                         </div>
 
                         <!-- Main Action Buttons -->
                         <div class="flex flex-col sm:flex-row gap-3">
                             <button (click)="addToCart()" 
-                                    [disabled]="(product.variants?.length && !selectedVariant) || (product.stock !== undefined && product.stock === 0)"
-                                    class="flex-1 py-4 bg-white border-2 border-gray-900 text-gray-900 rounded-full font-bold uppercase tracking-[0.1em] text-sm hover:bg-gray-50 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
-                                <span>Agregar</span>
+                                    [disabled]="(product.variants?.length && !selectedVariant) || isOutOfStock"
+                                    [class.bg-gray-300]="isOutOfStock"
+                                    [class.border-gray-300]="isOutOfStock"
+                                    [class.text-gray-500]="isOutOfStock"
+                                    [class.cursor-not-allowed]="isOutOfStock"
+                                    [class.bg-white]="!isOutOfStock"
+                                    [class.border-gray-900]="!isOutOfStock"
+                                    [class.text-gray-900]="!isOutOfStock"
+                                    [class.hover:bg-gray-50]="!isOutOfStock"
+                                    class="flex-1 py-4 border-2 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
+                                @if (isOutOfStock) {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    <span>Agotado</span>
+                                } @else {
+                                    <span>Agregar</span>
+                                }
                             </button>
                             
                             <button (click)="buyNow()" 
-                                    [disabled]="(product.variants?.length && !selectedVariant) || (product.stock !== undefined && product.stock === 0)"
-                                    class="flex-[2] py-4 bg-gray-900 text-white rounded-full font-bold uppercase tracking-[0.1em] text-sm hover:bg-black hover:shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
-                                <span>Comprar Ahora</span>
+                                    [disabled]="(product.variants?.length && !selectedVariant) || isOutOfStock"
+                                    [class.bg-gray-400]="isOutOfStock"
+                                    [class.text-gray-600]="isOutOfStock"
+                                    [class.cursor-not-allowed]="isOutOfStock"
+                                    [class.bg-gray-900]="!isOutOfStock"
+                                    [class.text-white]="!isOutOfStock"
+                                    [class.hover:bg-black]="!isOutOfStock"
+                                    [class.hover:shadow-xl]="!isOutOfStock"
+                                    class="flex-[2] py-4 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
+                                @if (isOutOfStock) {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    <span>Sin Stock</span>
+                                } @else {
+                                    <span>Comprar Ahora</span>
+                                }
                             </button>
                         </div>
 
@@ -509,6 +543,22 @@ export class ProductDetailComponent implements OnInit {
     return price;
   }
 
+  get currentStock(): number {
+    if (!this.product) return 0;
+
+    // If variant is selected, use variant stock
+    if (this.selectedVariant && this.selectedVariant.stock !== undefined) {
+      return Number(this.selectedVariant.stock);
+    }
+
+    // Otherwise use product stock
+    return this.product.stock !== undefined ? Number(this.product.stock) : 0;
+  }
+
+  get isOutOfStock(): boolean {
+    return this.currentStock === 0;
+  }
+
   selectVariant(variant: ProductVariant) {
     this.selectedVariant = variant;
     // Reset image index when changing variant
@@ -526,7 +576,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   increaseQuantity() {
-    if (!this.product?.stock || this.quantity < this.product.stock) {
+    if (this.currentStock === 0 || this.quantity < this.currentStock) {
       this.quantity++;
     }
   }
@@ -548,8 +598,8 @@ export class ProductDetailComponent implements OnInit {
     if (this.quantity < 1) {
       this.quantity = 1;
     }
-    if (this.product?.stock && this.quantity > this.product.stock) {
-      this.quantity = this.product.stock;
+    if (this.currentStock > 0 && this.quantity > this.currentStock) {
+      this.quantity = this.currentStock;
     }
   }
 
