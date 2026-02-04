@@ -385,6 +385,25 @@ const PAYMENT_PROVIDERS = [
            </div>
         </div>
 
+        <!-- Stock Control Configuration -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+           <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-terra"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Control de Inventario
+           </h2>
+           <p class="text-sm text-gray-600 mb-6">Controla si tu tienda debe validar la disponibilidad de stock. Útil para servicios digitales, dropshipping o pre-órdenes.</p>
+           
+           <div class="flex items-center justify-between p-4 border rounded-lg hover:border-terra/30 transition-colors">
+               <div>
+                   <label class="block text-sm font-bold text-gray-900">Activar Validación de Stock</label>
+                   <p class="text-xs text-gray-500 mt-1">Cuando está desactivado, todos los productos pueden venderse sin límite de cantidad</p>
+               </div>
+               <div class="flex items-center">
+                    <input type="checkbox" formControlName="useStockControl" class="w-5 h-5 text-terra rounded focus:ring-terra">
+               </div>
+           </div>
+        </div>
+
         <!-- Social Media -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -554,6 +573,7 @@ export class TenantSettingsComponent implements OnInit {
       themePrimaryColor: ['#b24343'],
       themeSecondaryColor: ['#f4e1d2'],
       wholesaleEnabled: [false],
+      useStockControl: [true], // Stock control enabled by default
       paymentMethods: this.fb.array([])
     });
 
@@ -631,7 +651,8 @@ export class TenantSettingsComponent implements OnInit {
       announcementTextColor: tenant.announcementTextColor || '#ffffff',
       themePrimaryColor: tenant.themePrimaryColor || '#b24343',
       themeSecondaryColor: tenant.themeSecondaryColor || '#f4e1d2',
-      wholesaleEnabled: tenant.wholesaleEnabled || false
+      wholesaleEnabled: tenant.wholesaleEnabled || false,
+      useStockControl: tenant.useStockControl !== undefined ? tenant.useStockControl : true // Default to true
     });
 
     // Init Payment Methods
@@ -794,6 +815,9 @@ export class TenantSettingsComponent implements OnInit {
 
     // Wholesale
     formData.append('wholesaleEnabled', String(formValue.wholesaleEnabled));
+
+    // Stock Control
+    formData.append('useStockControl', String(formValue.useStockControl));
 
     // Payment methods as JSON string
     formData.append('paymentMethods', JSON.stringify(formValue.paymentMethods));

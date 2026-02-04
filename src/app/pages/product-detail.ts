@@ -215,8 +215,8 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                             <div>
                                 <p class="text-orange-800 font-bold text-sm uppercase tracking-wide">¡Alta Demanda!</p>
                                 <p class="text-orange-600 text-xs">
-                                    @if (!product.ignoreStock && product.stock > 0) {
-                                        Solo quedan {{ product.stock }} unidades.
+                                    @if (tenant?.useStockControl !== false && !product.ignoreStock && currentStock > 0) {
+                                        Solo quedan {{ currentStock }} unidades.
                                     } @else {
                                         Pocas unidades disponibles.
                                     }
@@ -556,6 +556,17 @@ export class ProductDetailComponent implements OnInit {
   }
 
   get isOutOfStock(): boolean {
+    // If tenant has disabled stock control globally, never out of stock
+    if (this.tenant?.useStockControl === false) {
+      return false;
+    }
+
+    // If this specific product ignores stock, never out of stock
+    if (this.product?.ignoreStock === true) {
+      return false;
+    }
+
+    // Otherwise check actual stock
     return this.currentStock === 0;
   }
 

@@ -42,6 +42,7 @@ export interface Tenant {
     themePrimaryColor?: string;
     themeSecondaryColor?: string;
     wholesaleEnabled?: boolean;
+    useStockControl?: boolean; // Global stock control setting
 }
 
 export interface CreateFullTenantDto {

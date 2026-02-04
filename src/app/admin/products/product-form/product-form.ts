@@ -113,8 +113,8 @@ interface VariantDraft {
                         <div class="flex items-center">
                             <input type="checkbox" [(ngModel)]="ignoreStock" name="ignoreStock" id="ignoreStock" class="w-5 h-5 text-terra rounded border-gray-300 focus:ring-terra">
                             <label for="ignoreStock" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
-                                👁️ Ocultar Stock Real
-                                <p class="text-xs text-gray-500 font-normal">No muestra la cantidad exacta al cliente.</p>
+                                ∞ Venta Ilimitada (Ignorar Stock)
+                                <p class="text-xs text-gray-500 font-normal">Este producto se podrá vender siempre, sin importar el stock.</p>
                             </label>
                         </div>
                     </div>
