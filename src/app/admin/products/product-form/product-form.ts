@@ -67,6 +67,27 @@ interface VariantDraft {
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
                         <textarea [(ngModel)]="description" name="description" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-terra focus:ring-2 focus:ring-terra/20 outline-none transition-all"></textarea>
+                        
+                        <!-- Formatting Help -->
+                        <div class="mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                            <div class="flex items-start gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-600 flex-shrink-0 mt-0.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 16v-4"/>
+                                    <path d="M12 8h.01"/>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-blue-900 mb-1">💡 Formato de texto disponible:</p>
+                                    <div class="text-xs text-blue-700 space-y-0.5">
+                                        <div class="flex flex-wrap gap-x-4 gap-y-1">
+                                            <span><code class="bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">**texto**</code> = <strong>negrita</strong></span>
+                                            <span><code class="bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">__texto__</code> = <u>subrayado</u></span>
+                                            <span><code class="bg-blue-100 px-1.5 py-0.5 rounded text-[11px]">*texto*</code> = <em>cursiva</em></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div>

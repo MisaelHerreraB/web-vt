@@ -8,11 +8,12 @@ import { getCurrencySymbol } from '../constants/currencies';
 import { CartService } from '../services/cart.service';
 import { CartDrawerComponent } from '../components/cart-drawer/cart-drawer.component';
 import { CartSummaryComponent } from '../components/cart-summary/cart-summary';
+import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent],
+  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent, FormatDescriptionPipe],
   template: `
     <div class="min-h-screen bg-gray-50 font-sans text-gray-800 pb-32">
       <!-- Consistent Header with Home -->
@@ -330,8 +331,9 @@ import { CartSummaryComponent } from '../components/cart-summary/cart-summary';
                     <div>
                         <h3 class="text-sm font-bold uppercase text-gray-900 tracking-wider mb-3">Detalles</h3>
                         <div class="prose prose-sm text-gray-600 leading-relaxed overflow-hidden"
+                             style="white-space: pre-line;"
                              [class.line-clamp-4]="!showFullDescription"
-                             [innerHTML]="product.description">
+                             [innerHTML]="product.description | formatDescription">
                         </div>
                         @if (product.description && product.description.length > 200) {
                             <button (click)="toggleDescription()" 
