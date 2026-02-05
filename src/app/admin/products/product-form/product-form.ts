@@ -117,6 +117,15 @@ interface VariantDraft {
                                 <p class="text-xs text-gray-500 font-normal">Este producto se podrá vender siempre, sin importar el stock.</p>
                             </label>
                         </div>
+                        
+                        <!-- Show Stock Quantity -->
+                         <div class="flex items-center">
+                            <input type="checkbox" [(ngModel)]="showStockQuantity" name="showStockQuantity" id="showStockQuantity" class="w-5 h-5 text-terra rounded border-gray-300 focus:ring-terra">
+                            <label for="showStockQuantity" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
+                                📊 Mostrar Cantidad en Urgencia
+                                <p class="text-xs text-gray-500 font-normal">Muestra "Solo quedan X unidades" en la alerta.</p>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -382,8 +391,10 @@ export class ProductFormComponent implements OnInit {
     categoryId = '';
 
     // settings
+    // settings
     urgencyOverride = false;
     ignoreStock = false;
+    showStockQuantity = false;
 
     // image
     selectedFile: File | null = null;
@@ -466,6 +477,7 @@ export class ProductFormComponent implements OnInit {
                 // Urgency / Stock settings
                 if ((product as any).urgencyOverride) this.urgencyOverride = true;
                 if ((product as any).ignoreStock) this.ignoreStock = true;
+                if ((product as any).showStockQuantity) this.showStockQuantity = true;
 
                 this.cdr.detectChanges();
             },
@@ -572,6 +584,7 @@ export class ProductFormComponent implements OnInit {
 
             formData.append('urgencyOverride', this.urgencyOverride.toString());
             formData.append('ignoreStock', this.ignoreStock.toString());
+            formData.append('showStockQuantity', this.showStockQuantity.toString());
 
             // DON'T send images here - they are managed separately via:
             // - removeProductImage()

@@ -40,6 +40,7 @@ export interface Product {
     tenant_id: string;
     ignoreStock?: boolean;
     urgencyOverride?: boolean;
+    showStockQuantity?: boolean;
 }
 
 @Injectable({

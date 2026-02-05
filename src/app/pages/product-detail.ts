@@ -1,4 +1,6 @@
-import { Component, Input, OnInit, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+
+
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -215,7 +217,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                             <div>
                                 <p class="text-orange-800 font-bold text-sm uppercase tracking-wide">¡Alta Demanda!</p>
                                 <p class="text-orange-600 text-xs">
-                                    @if (tenant?.useStockControl !== false && !product.ignoreStock && currentStock > 0) {
+                                    @if (product.showStockQuantity && currentStock > 0) {
                                         Solo quedan {{ currentStock }} unidades.
                                     } @else {
                                         Pocas unidades disponibles.
@@ -462,43 +464,60 @@ export class ProductDetailComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
 
   ngOnInit() {
-    // Scroll to top when component loads (only in browser)
     if (isPlatformBrowser(this.platformId)) {
       window.scrollTo(0, 0);
     }
+    this.loadAllData();
+  }
 
-    if (this.slug && this.productId) {
-      // 1. Load Tenant First to ensure headers are available
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['productId'] && !changes['productId'].isFirstChange()) {
+      if (isPlatformBrowser(this.platformId)) {
+        window.scrollTo(0, 0);
+      }
+      this.loadProductData();
+    }
+  }
+
+  loadAllData() {
+    if (this.slug) {
       this.tenantService.getTenant(this.slug).subscribe({
         next: (data) => {
           this.tenant = data;
-
-          // 2. Load Product after Tenant is loaded
-          this.productService.getProduct(this.productId).subscribe({
-            next: (productData) => {
-              this.product = productData;
-              this.cdr.detectChanges(); // Force update
-
-              // 3. Load Related Products (Same category, exclude current)
-              if (this.product.category) {
-                // Handle case where category is an object (relation) or a string (ID)
-                const categoryId = typeof this.product.category === 'string'
-                  ? this.product.category
-                  : (this.product.category as any).id;
-
-                if (categoryId) {
-                  this.loadRelatedProducts(categoryId, this.product.id);
-                }
-              }
-            },
-            error: (err) => {
-              console.error('Error loading product:', err);
-            }
-          });
+          this.loadProductData();
         },
         error: (err) => console.error('Error loading tenant:', err)
       });
     }
+  }
+
+  loadProductData() {
+    if (!this.productId) return;
+
+    this.productService.getProduct(this.productId).subscribe({
+      next: (productData) => {
+        this.product = productData;
+
+        // Reset state for new product
+        this.selectedVariant = null;
+        this.selectedOptions = {};
+        this.quantity = 1;
+        this.currentImageIndex = 0;
+
+        this.cdr.detectChanges();
+
+        if (this.product.category) {
+          const categoryId = typeof this.product.category === 'string'
+            ? this.product.category
+            : (this.product.category as any).id;
+
+          if (categoryId) {
+            this.loadRelatedProducts(categoryId, this.product.id);
+          }
+        }
+      },
+      error: (err) => console.error('Error loading product:', err)
+    });
   }
 
   loadRelatedProducts(category: string, currentProductId: string) {
