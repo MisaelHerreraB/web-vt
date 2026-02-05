@@ -48,11 +48,8 @@ import { Tenant } from '../../services/tenant.service';
           }
         </div>
 
-        <!-- Spacer to push actions to the right -->
-        <div class="flex-1"></div>
-
         <!-- Actions -->
-        <div class="flex gap-2 md:gap-3 items-center">
+        <div class="flex gap-2 md:gap-3 items-center ml-auto">
           <!-- Info Button -->
           <button (click)="onInfoClick()" 
                   class="flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded-lg px-3 md:px-4 py-2 md:py-2.5 hover:bg-gray-200 transition-colors"
