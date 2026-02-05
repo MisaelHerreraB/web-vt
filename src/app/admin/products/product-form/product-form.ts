@@ -379,7 +379,49 @@ interface VariantDraft {
                     }
                 </div>
             </div>
+            <!-- Delete Zone -->
+             @if (isEditing) {
+                <div class="pt-8 border-t border-gray-200">
+                    <div class="bg-red-50 border border-red-100 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-red-900">Zona de Peligro</h3>
+                            <p class="text-xs text-red-700 mt-1">Eliminar este producto borrará permanentemente sus datos e imágenes.</p>
+                        </div>
+                        <button type="button" 
+                                (click)="deleteProduct()"
+                                [disabled]="uploading"
+                                class="px-4 py-2 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition-all disabled:opacity-50">
+                            {{ uploading ? 'Procesando...' : 'Eliminar Producto' }}
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
+
+        @if (uploading) {
+            <!-- Loading Overlay -->
+            <div class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 max-w-sm w-full text-center space-y-4">
+                    <!-- Spinner -->
+                    <div class="relative w-16 h-16 mx-auto">
+                        <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-terra border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Guardando cambios...</h3>
+                        <p class="text-sm text-gray-500 mt-1">Por favor espera mientras procesamos los datos e imágenes.</p>
+                    </div>
+
+                    @if (uploadProgress > 0 && uploadProgress < 100) {
+                         <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-terra h-full transition-all duration-300" [style.width.%]="uploadProgress"></div>
+                         </div>
+                         <p class="text-xs text-gray-400">Subiendo imágenes {{ uploadProgress }}%</p>
+                    }
+                </div>
+            </div>
+        }
     </form>
   `
 })
@@ -442,13 +484,27 @@ export class ProductFormComponent implements OnInit {
     }
 
     loadProduct(id: string) {
+        console.log('ProductFormComponent: Loading product with ID:', id);
         this.productService.getProduct(id).subscribe({
             next: (product) => {
-                console.log('ProductFormComponent: Loaded product', product);
-                this.title = product.title;
-                this.description = product.description;
-                this.price = product.price;
-                this.stock = product.stock;
+                console.log('ProductFormComponent: API Response:', product);
+
+                if (!product) {
+                    console.error('ProductFormComponent: Product is null/undefined');
+                    return;
+                }
+
+                // Basic fields
+                this.title = product.title || '';
+                this.description = product.description || '';
+                this.price = product.price != null ? Number(product.price) : null;
+                this.stock = product.stock != null ? Number(product.stock) : 0;
+
+                console.log('ProductFormComponent: Set fields -', {
+                    title: this.title,
+                    price: this.price,
+                    stock: this.stock
+                });
 
                 // Extract categoryId from the category object if it exists
                 if ((product as any).category && (product as any).category.id) {
@@ -458,31 +514,43 @@ export class ProductFormComponent implements OnInit {
                     this.categoryId = (product as any).categoryId || (product as any).category_id || '';
                 }
 
+                // Images
                 this.previewUrl = product.imageUrl || null;
 
+                // Reset arrays first
+                this.productImages = [];
+
                 // Load existing images
-                if (product.images && product.images.length > 0) {
-                    this.productImages = product.images;
+                if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                    this.productImages = [...product.images]; // Copy array
                 } else if (product.imageUrl) {
                     // Backwards compatibility: use imageUrl as first image
                     this.productImages = [product.imageUrl];
                 }
 
+                console.log('ProductFormComponent: Images loaded -', this.productImages);
+
                 if (product.variants) {
                     this.variants = product.variants.map(v => ({
                         ...v,
+                        price: v.price != null ? Number(v.price) : 0,
+                        stock: v.stock != null ? Number(v.stock) : 0,
                         imageIndexes: v.imageIndexes ? v.imageIndexes.map(i => Number(i)) : []
                     }));
                 }
 
                 // Urgency / Stock settings
-                if ((product as any).urgencyOverride) this.urgencyOverride = true;
-                if ((product as any).ignoreStock) this.ignoreStock = true;
-                if ((product as any).showStockQuantity) this.showStockQuantity = true;
+                // Force boolean conversion
+                if ((product as any).urgencyOverride) this.urgencyOverride = String((product as any).urgencyOverride) === 'true' || (product as any).urgencyOverride === true;
+                if ((product as any).ignoreStock) this.ignoreStock = String((product as any).ignoreStock) === 'true' || (product as any).ignoreStock === true;
+                if ((product as any).showStockQuantity) this.showStockQuantity = String((product as any).showStockQuantity) === 'true' || (product as any).showStockQuantity === true;
 
                 this.cdr.detectChanges();
             },
-            error: (err) => console.error('Error loading product', err)
+            error: (err) => {
+                console.error('Error loading product', err);
+                alert('Error cargando datos del producto. Revisa la consola.');
+            }
         });
     }
 
@@ -576,6 +644,7 @@ export class ProductFormComponent implements OnInit {
 
         // Helper to proceed with save
         const proceedToSave = () => {
+            this.uploading = true; // Ensure loading state is active
             const formData = new FormData();
             formData.append('title', this.title);
             formData.append('description', this.description);
@@ -623,7 +692,23 @@ export class ProductFormComponent implements OnInit {
                 });
             } else {
                 this.productService.createProduct(formData).subscribe({
-                    next: () => this.router.navigate(['../'], { relativeTo: this.route }),
+                    next: (newProduct) => {
+                        // If we have selected images, upload them now using the new product ID
+                        if (this.selectedImages.length > 0 && newProduct.id) {
+                            this.uploadNewImagesInternal(newProduct.id).subscribe({
+                                next: () => {
+                                    this.router.navigate(['../'], { relativeTo: this.route });
+                                },
+                                error: (err) => {
+                                    console.error('Error uploading images for new product:', err);
+                                    alert('Producto creado correctamente, pero hubo un error al subir las imágenes.');
+                                    this.router.navigate(['../'], { relativeTo: this.route });
+                                }
+                            });
+                        } else {
+                            this.router.navigate(['../'], { relativeTo: this.route });
+                        }
+                    },
                     error: (err) => {
                         console.error('Create error:', err);
                         alert('Error creating product');
@@ -650,6 +735,28 @@ export class ProductFormComponent implements OnInit {
         } else {
             proceedToSave();
         }
+    }
+
+    deleteProduct() {
+        if (!this.productId) return;
+
+        if (!confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer y borrará también las imágenes asociadas.')) {
+            return;
+        }
+
+        this.uploading = true; // Show loading state
+
+        this.productService.deleteProduct(this.productId).subscribe({
+            next: () => {
+                alert('Producto eliminado correctamente.');
+                this.router.navigate(['../../products'], { relativeTo: this.route });
+            },
+            error: (err) => {
+                console.error('Error deleting product:', err);
+                alert('Hubo un error al eliminar el producto: ' + (err.error?.message || err.message));
+                this.uploading = false;
+            }
+        });
     }
 
     // Multi-Image Methods

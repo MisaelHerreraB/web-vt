@@ -57,9 +57,14 @@ import { getCurrencySymbol } from '../../../constants/currencies';
                            }
                         </td>
                         <td class="px-6 py-4 text-right">
-                           <a [routerLink]="['../products', product.id]" class="text-gray-400 hover:text-terra transition-colors inline-block cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                           </a>
+                           <div class="flex items-center justify-end gap-2">
+                               <a [routerLink]="['../products', product.id]" title="Editar" class="text-gray-400 hover:text-terra transition-colors p-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                               </a>
+                               <button (click)="deleteProduct(product.id)" title="Eliminar" class="text-gray-400 hover:text-red-600 transition-colors p-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                               </button>
+                           </div>
                         </td>
                     </tr>
                 }
@@ -120,6 +125,21 @@ export class ProductListComponent implements OnInit {
   getTotalVariantStock(product: Product): number {
     if (!product.variants) return 0;
     return product.variants.reduce((acc, v) => acc + v.stock, 0);
+  }
+
+  deleteProduct(id: string) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
+
+    this.productService.deleteProduct(id).subscribe({
+      next: () => {
+        this.products = this.products.filter(p => p.id !== id);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error deleting product', err);
+        alert('Error al eliminar producto');
+      }
+    });
   }
 
   getSymbol(code: string | undefined): string {

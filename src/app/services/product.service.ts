@@ -99,13 +99,22 @@ export class ProductService {
         return this.http.get<Product>(`${this.apiUrl}/products/${id}`, this.getHeaders());
     }
 
+    // Helper to clear cache
+    private clearCache() {
+        this.productsCache.clear();
+    }
+
     createProduct(formData: FormData): Observable<Product> {
         // Content-Type is multipart/form-data, but Angular sets it automatically when passing FormData
-        return this.http.post<Product>(`${this.apiUrl}/products`, formData, this.getHeaders());
+        return this.http.post<Product>(`${this.apiUrl}/products`, formData, this.getHeaders()).pipe(
+            tap(() => this.clearCache())
+        );
     }
 
     updateProduct(id: string, formData: FormData): Observable<Product> {
-        return this.http.patch<Product>(`${this.apiUrl}/products/${id}`, formData, this.getHeaders());
+        return this.http.patch<Product>(`${this.apiUrl}/products/${id}`, formData, this.getHeaders()).pipe(
+            tap(() => this.clearCache())
+        );
     }
 
     uploadProductImages(productId: string, images: File[]): Observable<{ message: string; images: string[]; totalImages: number }> {
@@ -119,6 +128,8 @@ export class ProductService {
             `${this.apiUrl}/products/${productId}/upload-images`,
             formData,
             this.getHeaders()
+        ).pipe(
+            tap(() => this.clearCache())
         );
     }
 
@@ -128,7 +139,15 @@ export class ProductService {
         const headers = new HttpHeaders()
             .set('x-tenant-slug', tenant?.slug || '')
             .set('Content-Type', 'application/json');
-        return this.http.patch<Product>(`${this.apiUrl}/products/${productId}`, data, { headers });
+        return this.http.patch<Product>(`${this.apiUrl}/products/${productId}`, data, { headers }).pipe(
+            tap(() => this.clearCache())
+        );
+    }
+
+    deleteProduct(id: string): Observable<{ message: string }> {
+        return this.http.delete<{ message: string }>(`${this.apiUrl}/products/${id}`, this.getHeaders()).pipe(
+            tap(() => this.clearCache())
+        );
     }
 
     // Delete a single image from R2 storage
@@ -140,6 +159,8 @@ export class ProductService {
         return this.http.request<{ message: string; deletedUrl: string }>('DELETE', `${this.apiUrl}/products/image`, {
             headers,
             body: { imageUrl }
-        });
+        }).pipe(
+            tap(() => this.clearCache())
+        );
     }
 }
