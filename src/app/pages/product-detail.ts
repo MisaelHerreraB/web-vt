@@ -297,7 +297,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                              </div>
                              
                              <!-- Stock Status Badge (UX Best Practice) -->
-                             @if (currentStock > 0) {
+                             @if (!isOutOfStock) {
                                 <span class="text-xs text-green-700 font-bold bg-green-100 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     Disponible

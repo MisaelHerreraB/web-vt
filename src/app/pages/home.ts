@@ -178,7 +178,7 @@ import { HeaderMinimalComponent } from '../components/headers/header-minimal';
 
                  <!-- Badges: Bottom Left (Urgency - Moved to avoid covering faces) -->
                  <div class="absolute bottom-3 left-3 flex flex-col gap-2 z-10">
-                     @if (product.stock < 5 && product.stock > 0) {
+                     @if (product.stock < 5 && product.stock > 0 && !product.ignoreStock) {
                           <span class="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase animate-pulse shadow-sm">
                              ¡Últimos!
                          </span>
