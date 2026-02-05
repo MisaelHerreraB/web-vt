@@ -34,10 +34,12 @@ import { getCurrencySymbol } from '../../../constants/currencies';
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded bg-gray-100 flex-shrink-0 overflow-hidden">
-                                   @if (product.imageUrl) {
-                                       <img [src]="product.imageUrl" class="w-full h-full object-cover">
+                                   @if (product.images?.[0] || product.imageUrl) {
+                                       <img [src]="product.images?.[0] || product.imageUrl" class="w-full h-full object-cover">
                                    } @else {
-                                       <div class="w-full h-full flex items-center justify-center text-xs text-gray-400">IMG</div>
+                                       <div class="w-full h-full flex items-center justify-center text-xs text-gray-400 bg-gray-50">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                       </div>
                                    }
                                 </div>
                                 <div>
