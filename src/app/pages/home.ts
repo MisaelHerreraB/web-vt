@@ -167,15 +167,19 @@ import { HeaderMinimalComponent } from '../components/headers/header-minimal';
                      [alt]="product.title"
                      class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110">
                  
-                 <!-- Badges -->
-                 <div class="absolute top-3 left-3 flex flex-col gap-2">
+                 <!-- Badges: Top Left (Variety) -->
+                 <div class="absolute top-3 left-3 flex flex-col gap-2 z-10">
                     @if (product.variants && product.variants.length > 0) {
                         <span class="bg-black/30 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase">
                             Variedad
                         </span>
                     }
+                 </div>
+
+                 <!-- Badges: Bottom Left (Urgency - Moved to avoid covering faces) -->
+                 <div class="absolute bottom-3 left-3 flex flex-col gap-2 z-10">
                      @if (product.stock < 5 && product.stock > 0) {
-                          <span class="bg-red-500/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase animate-pulse">
+                          <span class="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase animate-pulse shadow-sm">
                              ¡Últimos!
                          </span>
                      }
@@ -185,7 +189,7 @@ import { HeaderMinimalComponent } from '../components/headers/header-minimal';
                             ¡Se Agota!
                         </span>
                      }
-                  </div>
+                 </div>
                  
                  <!-- Desktop Quick Actions Overlay -->
                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex items-center justify-center gap-3 backdrop-blur-[2px] z-10 pointer-events-none">
