@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { OrderService } from '../../services/order.service';
@@ -77,7 +77,7 @@ import { CsvExportService } from '../../services/csv-export.service';
 
             <!-- Orders Table -->
             @else {
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50 border-b border-gray-200">
@@ -92,7 +92,7 @@ import { CsvExportService } from '../../services/csv-export.service';
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
-                                @for (order of filteredOrders(); track order.id) {
+                                @for (order of paginatedOrders(); track order.id) {
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             #{{ order.id.substring(0, 8) }}
@@ -123,11 +123,16 @@ import { CsvExportService } from '../../services/csv-export.service';
                                                 {{ translateStatus(order.status) }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm flex items-center gap-3">
                                             <a [routerLink]="[order.id]" 
                                                class="text-terra hover:text-terra/80 font-medium">
-                                                Ver detalles →
+                                                Ver detalles
                                             </a>
+                                            <button (click)="deleteOrder(order.id)" 
+                                                    class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                                    title="Eliminar Pedido">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -135,11 +140,62 @@ import { CsvExportService } from '../../services/csv-export.service';
                         </table>
                     </div>
 
-                    <!-- Pagination Info -->
-                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                        <p class="text-sm text-gray-600">
-                            Mostrando <span class="font-medium">{{ filteredOrders().length }}</span> pedido(s)
-                        </p>
+                    <!-- Pagination Controls -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <button (click)="changePage(currentPage() - 1)" 
+                                    [disabled]="currentPage() === 1"
+                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Anterior
+                            </button>
+                            <button (click)="changePage(currentPage() + 1)" 
+                                    [disabled]="currentPage() === totalPages()"
+                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Siguiente
+                            </button>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Mostrando <span class="font-medium">{{ startIndex() + 1 }}</span> a <span class="font-medium">{{ endIndex() }}</span> de <span class="font-medium">{{ filteredOrders().length }}</span> resultados
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <button (click)="changePage(currentPage() - 1)" 
+                                            [disabled]="currentPage() === 1"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span class="sr-only">Anterior</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    
+                                    <!-- Simple logic: just show 1..totalPages for now, scrolling if needed or just numbers -->
+                                    <!-- For improved UX we could limit visible pages, but for 'hundreds' (e.g. 50 pages) we might want a limit. Let's keep it simple first or add a basic slice -->
+                                    @for (page of visiblePages(); track page) {
+                                        <button (click)="changePage(page)" 
+                                                [class.bg-terra-50]="currentPage() === page"
+                                                [class.text-terra]="currentPage() === page"
+                                                [class.border-terra]="currentPage() === page"
+                                                [class.bg-white]="currentPage() !== page"
+                                                [class.text-gray-500]="currentPage() !== page"
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50 z-10">
+                                            {{ page }}
+                                        </button>
+                                    }
+
+                                    <button (click)="changePage(currentPage() + 1)" 
+                                            [disabled]="currentPage() === totalPages()"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span class="sr-only">Siguiente</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
                     </div>
                 </div>
             }
@@ -152,10 +208,50 @@ export class OrdersListComponent implements OnInit {
     private orderService = inject(OrderService);
     private csvService = inject(CsvExportService);
     private router = inject(Router);
+    private platformId = inject(PLATFORM_ID);
 
     orders = signal<any[]>([]);
     filteredOrders = signal<any[]>([]);
     loading = signal(false);
+
+    // Pagination Signals
+    currentPage = signal(1);
+    itemsPerPage = signal(10);
+
+    // Computed Pagination
+    totalPages = computed(() => Math.ceil(this.filteredOrders().length / this.itemsPerPage()));
+
+    paginatedOrders = computed(() => {
+        const start = (this.currentPage() - 1) * this.itemsPerPage();
+        const end = start + this.itemsPerPage();
+        return this.filteredOrders().slice(start, end);
+    });
+
+    startIndex = computed(() => (this.currentPage() - 1) * this.itemsPerPage());
+
+    endIndex = computed(() => {
+        const end = this.startIndex() + this.itemsPerPage();
+        return end > this.filteredOrders().length ? this.filteredOrders().length : end;
+    });
+
+    visiblePages = computed(() => {
+        const total = this.totalPages();
+        const current = this.currentPage();
+        const maxVisible = 5;
+
+        let startPage = Math.max(1, current - Math.floor(maxVisible / 2));
+        let endPage = Math.min(total, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        const pages = [];
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+        return pages;
+    });
 
     statusFilter = '';
     searchTerm = '';
@@ -167,14 +263,16 @@ export class OrdersListComponent implements OnInit {
     loadOrders() {
         this.loading.set(true);
         this.orderService.getOrders().subscribe({
-            next: (data) => {
+            next: (data: any) => {
                 this.orders.set(data);
                 this.applyFilters();
                 this.loading.set(false);
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('Error loading orders:', err);
-                alert('Error al cargar pedidos');
+                if (isPlatformBrowser(this.platformId)) {
+                    alert('Error al cargar pedidos');
+                }
                 this.loading.set(false);
             }
         });
@@ -199,6 +297,13 @@ export class OrdersListComponent implements OnInit {
         }
 
         this.filteredOrders.set(filtered);
+        this.currentPage.set(1); // Reset to first page on filter change
+    }
+
+    changePage(page: number) {
+        if (page >= 1 && page <= this.totalPages()) {
+            this.currentPage.set(page);
+        }
     }
 
     exportToCSV() {
@@ -235,5 +340,35 @@ export class OrdersListComponent implements OnInit {
             'CANCELLED': 'bg-red-100 text-red-800'
         };
         return `${baseClasses} ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`;
+    }
+
+    deleteOrder(id: string) {
+        if (!isPlatformBrowser(this.platformId)) return;
+
+        if (!confirm('¿Estás seguro de que deseas eliminar este pedido permanentemente?')) {
+            return;
+        }
+
+        // Double confirmation for safety
+        const verification = prompt('Escribe "ELIMINAR" para confirmar la acción:');
+        if (verification !== 'ELIMINAR') {
+            alert('Acción cancelada. El texto no coincide.');
+            return;
+        }
+
+        this.loading.set(true);
+        this.orderService.deleteOrder(id).subscribe({
+            next: () => {
+                const message = 'Pedido eliminado correctamente';
+                if (isPlatformBrowser(this.platformId)) alert(message);
+                this.loadOrders(); // Refresh list
+            },
+            error: (err: any) => {
+                console.error('Error deleting order:', err);
+                const message = 'Error al eliminar el pedido: ' + (err.error?.message || err.message);
+                if (isPlatformBrowser(this.platformId)) alert(message);
+                this.loading.set(false);
+            }
+        });
     }
 }

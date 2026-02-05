@@ -60,4 +60,8 @@ export class OrderService {
     updateOrderStatus(id: string, status: string): Observable<any> {
         return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status }, this.getHeaders());
     }
+
+    deleteOrder(id: string): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/${id}`, this.getHeaders());
+    }
 }

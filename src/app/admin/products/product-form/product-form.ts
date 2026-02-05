@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -460,6 +460,7 @@ export class ProductFormComponent implements OnInit {
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private cdr = inject(ChangeDetectorRef);
+    private platformId = inject(PLATFORM_ID);
 
     isEditing = false;
     productId: string | null = null;
@@ -549,7 +550,9 @@ export class ProductFormComponent implements OnInit {
             },
             error: (err) => {
                 console.error('Error loading product', err);
-                alert('Error cargando datos del producto. Revisa la consola.');
+                if (isPlatformBrowser(this.platformId)) {
+                    alert('Error cargando datos del producto. Revisa la consola.');
+                }
             }
         });
     }
@@ -638,6 +641,7 @@ export class ProductFormComponent implements OnInit {
     }
 
     onSubmit() {
+        if (!isPlatformBrowser(this.platformId)) return;
         if (this.uploading) return;
 
         if (!this.title || !this.price) return;
@@ -686,7 +690,7 @@ export class ProductFormComponent implements OnInit {
                     next: () => this.router.navigate(['../../products'], { relativeTo: this.route }),
                     error: (err) => {
                         console.error('Update error:', err);
-                        alert('Error updating product: ' + (err.error?.message || err.message || 'Unknown error'));
+                        if (isPlatformBrowser(this.platformId)) alert('Error updating product: ' + (err.error?.message || err.message || 'Unknown error'));
                         this.uploading = false;
                     }
                 });
@@ -701,7 +705,7 @@ export class ProductFormComponent implements OnInit {
                                 },
                                 error: (err) => {
                                     console.error('Error uploading images for new product:', err);
-                                    alert('Producto creado correctamente, pero hubo un error al subir las imágenes.');
+                                    if (isPlatformBrowser(this.platformId)) alert('Producto creado correctamente, pero hubo un error al subir las imágenes.');
                                     this.router.navigate(['../'], { relativeTo: this.route });
                                 }
                             });
@@ -711,7 +715,7 @@ export class ProductFormComponent implements OnInit {
                     },
                     error: (err) => {
                         console.error('Create error:', err);
-                        alert('Error creating product');
+                        if (isPlatformBrowser(this.platformId)) alert('Error creating product');
                         this.uploading = false;
                     }
                 });
@@ -728,7 +732,7 @@ export class ProductFormComponent implements OnInit {
                 },
                 error: (err) => {
                     console.error('Upload error:', err);
-                    alert('Error subiendo imágenes. El producto no se guardó.');
+                    if (isPlatformBrowser(this.platformId)) alert('Error subiendo imágenes. El producto no se guardó.');
                     this.uploading = false;
                 }
             });
@@ -738,6 +742,7 @@ export class ProductFormComponent implements OnInit {
     }
 
     deleteProduct() {
+        if (!isPlatformBrowser(this.platformId)) return;
         if (!this.productId) return;
 
         if (!confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer y borrará también las imágenes asociadas.')) {
@@ -748,12 +753,12 @@ export class ProductFormComponent implements OnInit {
 
         this.productService.deleteProduct(this.productId).subscribe({
             next: () => {
-                alert('Producto eliminado correctamente.');
+                if (isPlatformBrowser(this.platformId)) alert('Producto eliminado correctamente.');
                 this.router.navigate(['../../products'], { relativeTo: this.route });
             },
             error: (err) => {
                 console.error('Error deleting product:', err);
-                alert('Hubo un error al eliminar el producto: ' + (err.error?.message || err.message));
+                if (isPlatformBrowser(this.platformId)) alert('Hubo un error al eliminar el producto: ' + (err.error?.message || err.message));
                 this.uploading = false;
             }
         });
@@ -761,6 +766,7 @@ export class ProductFormComponent implements OnInit {
 
     // Multi-Image Methods
     onMultipleFilesSelected(event: any) {
+        if (!isPlatformBrowser(this.platformId)) return;
         const files: FileList = event.target.files;
         if (!files || files.length === 0) return;
 
