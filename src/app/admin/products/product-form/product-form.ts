@@ -38,6 +38,7 @@ interface VariantDraft {
             [subtitle]="title || 'Completa la información del producto'"
             [saveLabel]="isEditing ? 'Actualizar Producto' : 'Guardar Producto'"
             [disabled]="!title || !price"
+            [loading]="uploading"
             backRoute="../"
             (onSave)="onSubmit()"
             (onCancel)="navigateBack()">
@@ -831,8 +832,7 @@ export class ProductFormComponent implements OnInit {
                 setTimeout(() => {
                     this.uploading = false;
                     this.uploadProgress = 0;
-                    // Success notification
-                    // ...
+                    this.cdr.detectChanges(); // Ensure UI updates
                 }, 500);
             },
             error: (err) => {
