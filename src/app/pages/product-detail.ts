@@ -589,6 +589,10 @@ export class ProductDetailComponent implements OnInit {
     return this.currentStock === 0;
   }
 
+  get isUnlimited(): boolean {
+    return this.tenant?.useStockControl === false || this.product?.ignoreStock === true;
+  }
+
   selectVariant(variant: ProductVariant) {
     this.selectedVariant = variant;
     // Reset image index when changing variant
@@ -606,7 +610,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   increaseQuantity() {
-    if (this.currentStock === 0 || this.quantity < this.currentStock) {
+    if (this.isUnlimited || this.quantity < this.currentStock) {
       this.quantity++;
     }
   }
@@ -628,7 +632,7 @@ export class ProductDetailComponent implements OnInit {
     if (this.quantity < 1) {
       this.quantity = 1;
     }
-    if (this.currentStock > 0 && this.quantity > this.currentStock) {
+    if (!this.isUnlimited && this.currentStock > 0 && this.quantity > this.currentStock) {
       this.quantity = this.currentStock;
     }
   }
@@ -650,7 +654,7 @@ export class ProductDetailComponent implements OnInit {
         }
       }
 
-      if (this.product.stock !== undefined && this.product.stock === 0) {
+      if (this.isOutOfStock) {
         alert('Este producto está agotado.');
         return;
       }
