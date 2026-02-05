@@ -33,6 +33,7 @@ export interface Tenant {
     announcementEnabled?: boolean;
     announcementBgColor?: string;
     announcementTextColor?: string;
+    announcementSpeed?: 'slow' | 'normal' | 'fast';
     welcomePopupEnabled?: boolean;
     welcomePopupTitle?: string;
     welcomePopupContent?: string;

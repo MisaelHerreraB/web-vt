@@ -10,7 +10,8 @@ import { Tenant } from '../../services/tenant.service';
     @if (tenant && tenant.announcementEnabled && tenant.announcementText) {
       <div [ngStyle]="{
             'background-color': tenant.announcementBgColor || '#111827',
-            'color': tenant.announcementTextColor || '#FFFFFF'
+            'color': tenant.announcementTextColor || '#FFFFFF',
+            '--marquee-duration': getDuration()
            }" 
            class="text-xs md:text-sm py-2.5 overflow-hidden relative z-50">
          <div class="marquee-container flex whitespace-nowrap">
@@ -45,7 +46,7 @@ import { Tenant } from '../../services/tenant.service';
        align-items: center;
     }
     .marquee-content {
-       animation: scroll 20s linear infinite;
+       animation: scroll var(--marquee-duration, 20s) linear infinite;
     }
     @keyframes scroll {
        0% { transform: translateX(0); }
@@ -59,4 +60,12 @@ import { Tenant } from '../../services/tenant.service';
 })
 export class AnnouncementBarComponent {
    @Input() tenant: Tenant | null = null;
+
+   getDuration(): string {
+      switch (this.tenant?.announcementSpeed) {
+         case 'slow': return '30s';
+         case 'fast': return '10s';
+         default: return '20s'; // normal
+      }
+   }
 }

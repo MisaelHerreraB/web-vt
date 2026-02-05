@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, ChangeDetectorRef, PLATFORM_ID } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, ChangeDetectorRef, PLATFORM_ID, HostListener } from '@angular/core';
 
 
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -94,8 +94,20 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
 
                         <!-- Navigation Arrows (Desktop) -->
                         @if (getProductImages().length > 1) {
-                            <!-- Previous Button -->
-                            <button (click)="previousImage()"
+                            <!-- Zoom Button (New UX) -->
+                    <button (click)="openZoom()" 
+                            class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-sm text-gray-700 hover:text-terra hover:shadow-md transition-all z-20 group"
+                            title="Ampliar imagen">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:scale-110 transition-transform">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+
+                    <!-- Previous Button -->
+                    <button (click)="previousImage()"
                                     class="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                             </button>
@@ -417,6 +429,67 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
         }
       </main>
 
+      <!-- Lightbox / Fullscreen Zoom Modal -->
+      @if (isZoomOpen) {
+        <div class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center animate-fade-in"
+             (click)="closeZoom()">
+             
+            <!-- Close Button -->
+            <button class="absolute top-4 right-4 z-[110] text-white/70 hover:text-white p-4 transition-colors"
+                    (click)="closeZoom()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <!-- Image Container -->
+            <div class="w-full h-full flex items-center justify-center overflow-hidden"
+                 [class.cursor-zoom-in]="zoomLevel === 1"
+                 [class.cursor-grab]="zoomLevel > 1 && !isDragging"
+                 [class.cursor-grabbing]="isDragging"
+                 (click)="$event.stopPropagation(); toggleZoomLevel($event)">
+                
+                <img [src]="getCurrentImage()" 
+                     [alt]="product?.title"
+                     class="max-w-[95%] max-h-[95vh] object-contain transition-transform duration-0 ease-linear select-none"
+                     [class.duration-300]="!isDragging"
+                     [style.transform]="'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ')'"
+                     
+                     (mousedown)="startDrag($event)"
+                     (touchstart)="startDrag($event)"
+                     
+                     (mousemove)="onDrag($event)"
+                     (touchmove)="onDrag($event)"
+                     
+                     (mouseup)="endDrag()"
+                     (mouseleave)="endDrag()"
+                     (touchend)="endDrag()"
+                     
+                     draggable="false">
+            </div>
+
+            <!-- Navigation in Modal -->
+            @if (getProductImages().length > 1) {
+                <button (click)="$event.stopPropagation(); previousImage()"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 transition-colors z-[110]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button (click)="$event.stopPropagation(); nextImage()"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 transition-colors z-[110]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                
+                <!-- Indicators -->
+                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-[110]">
+                    @for (img of getProductImages(); track $index) {
+                        <div class="w-2 h-2 rounded-full transition-all"
+                             [class.bg-white]="currentImageIndex === $index"
+                             [class.bg-white/30]="currentImageIndex !== $index">
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+      }
+
       <!-- Cart Drawer -->
       <app-cart-drawer></app-cart-drawer>
       
@@ -439,6 +512,13 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
     .animate-fade-in-up {
       animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.2s ease-out forwards;
+    }
   `]
 })
 export class ProductDetailComponent implements OnInit {
@@ -453,6 +533,23 @@ export class ProductDetailComponent implements OnInit {
   linkCopied: boolean = false;
   showFullDescription: boolean = false;
   currentImageIndex: number = 0;
+
+  // Zoom / Lightbox State
+  isZoomOpen = false;
+  zoomLevel = 1;
+
+  // Pan State
+  isDragging = false;
+  wasDragging = false; // New flag to distinguish click from drag
+  panX = 0;
+  panY = 0;
+  private startX = 0;
+  private startY = 0;
+  private lastPanX = 0;
+  private lastPanY = 0;
+  private dragStartClientX = 0;
+  private dragStartClientY = 0;
+
   private touchStartX: number = 0;
   private touchEndX: number = 0;
 
@@ -795,6 +892,94 @@ export class ProductDetailComponent implements OnInit {
     const images = this.getProductImages();
     if (images.length === 0) return 'https://via.placeholder.com/800x1000?text=Sin+Imagen';
     return images[this.currentImageIndex] || images[0];
+  }
+
+  openZoom() {
+    this.isZoomOpen = true;
+    this.zoomLevel = 1;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  closeZoom() {
+    this.isZoomOpen = false;
+    this.zoomLevel = 1;
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+
+  toggleZoomLevel(event: MouseEvent) {
+    if (this.wasDragging) {
+      this.wasDragging = false;
+      event.stopPropagation();
+      return;
+    }
+
+    if (this.zoomLevel === 1) {
+      this.zoomLevel = 2;
+    } else {
+      this.zoomLevel = 1;
+      // Reset pan when zooming out
+      this.panX = 0;
+      this.panY = 0;
+      this.lastPanX = 0;
+      this.lastPanY = 0;
+    }
+    event.stopPropagation();
+  }
+
+  // Pan / Drag Events
+  startDrag(event: MouseEvent | TouchEvent) {
+    if (this.zoomLevel <= 1) return;
+
+    this.isDragging = true;
+    this.wasDragging = false;
+
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+
+    this.dragStartClientX = clientX;
+    this.dragStartClientY = clientY;
+
+    this.startX = clientX - this.lastPanX;
+    this.startY = clientY - this.lastPanY;
+
+    // Prevent default drag behavior
+    if (event instanceof MouseEvent) {
+      event.preventDefault();
+    }
+  }
+
+  onDrag(event: MouseEvent | TouchEvent) {
+    if (!this.isDragging || this.zoomLevel <= 1) return;
+
+    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
+    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+
+    // Check threshold
+    if (!this.wasDragging) {
+      const moveX = Math.abs(clientX - this.dragStartClientX);
+      const moveY = Math.abs(clientY - this.dragStartClientY);
+      if (moveX > 5 || moveY > 5) {
+        this.wasDragging = true;
+      }
+    }
+
+    this.panX = clientX - this.startX;
+    this.panY = clientY - this.startY;
+
+    event.preventDefault(); // Prevent scrolling while dragging
+  }
+
+  endDrag() {
+    this.isDragging = false;
+    this.lastPanX = this.panX;
+    this.lastPanY = this.panY;
+  }
+
+  @HostListener('window:keydown.esc')
+  onEsc() {
+    if (this.isZoomOpen) {
+      this.closeZoom();
+    }
   }
 
   nextImage() {

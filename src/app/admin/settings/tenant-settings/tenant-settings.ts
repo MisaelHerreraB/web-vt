@@ -254,6 +254,30 @@ const PAYMENT_PROVIDERS = [
                                <input type="text" formControlName="announcementText" placeholder="Ej: ¡Envío gratis por compras mayores a S/100!" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-terra focus:border-terra outline-none transition-all">
                             </div>
                             
+                            <div class="space-y-2">
+                               <label class="block text-sm font-medium text-gray-700">Velocidad de Animación</label>
+                               <div class="grid grid-cols-3 gap-3">
+                                   <label class="cursor-pointer relative">
+                                       <input type="radio" formControlName="announcementSpeed" value="slow" class="peer sr-only">
+                                       <div class="text-center px-3 py-2 border rounded-lg text-sm font-medium text-gray-600 peer-checked:bg-terra peer-checked:text-white peer-checked:border-terra hover:border-terra/50 hover:bg-gray-50 transition-all">
+                                           Lenta
+                                       </div>
+                                   </label>
+                                   <label class="cursor-pointer relative">
+                                       <input type="radio" formControlName="announcementSpeed" value="normal" class="peer sr-only">
+                                       <div class="text-center px-3 py-2 border rounded-lg text-sm font-medium text-gray-600 peer-checked:bg-terra peer-checked:text-white peer-checked:border-terra hover:border-terra/50 hover:bg-gray-50 transition-all">
+                                           Normal
+                                       </div>
+                                   </label>
+                                   <label class="cursor-pointer relative">
+                                       <input type="radio" formControlName="announcementSpeed" value="fast" class="peer sr-only">
+                                       <div class="text-center px-3 py-2 border rounded-lg text-sm font-medium text-gray-600 peer-checked:bg-terra peer-checked:text-white peer-checked:border-terra hover:border-terra/50 hover:bg-gray-50 transition-all">
+                                           Rápida
+                                       </div>
+                                   </label>
+                               </div>
+                            </div>
+                            
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-2">
                                      <label class="block text-sm font-medium text-gray-700">Color de Fondo</label>
@@ -570,6 +594,7 @@ export class TenantSettingsComponent implements OnInit {
       announcementText: [''],
       announcementBgColor: ['#000000'],
       announcementTextColor: ['#ffffff'],
+      announcementSpeed: ['normal'],
       themePrimaryColor: ['#b24343'],
       themeSecondaryColor: ['#f4e1d2'],
       wholesaleEnabled: [false],
@@ -649,6 +674,7 @@ export class TenantSettingsComponent implements OnInit {
       announcementText: tenant.announcementText || '',
       announcementBgColor: tenant.announcementBgColor || '#000000',
       announcementTextColor: tenant.announcementTextColor || '#ffffff',
+      announcementSpeed: tenant.announcementSpeed || 'normal',
       themePrimaryColor: tenant.themePrimaryColor || '#b24343',
       themeSecondaryColor: tenant.themeSecondaryColor || '#f4e1d2',
       wholesaleEnabled: tenant.wholesaleEnabled || false,
@@ -808,6 +834,7 @@ export class TenantSettingsComponent implements OnInit {
     if (formValue.announcementText) formData.append('announcementText', formValue.announcementText);
     if (formValue.announcementBgColor) formData.append('announcementBgColor', formValue.announcementBgColor);
     if (formValue.announcementTextColor) formData.append('announcementTextColor', formValue.announcementTextColor);
+    if (formValue.announcementSpeed) formData.append('announcementSpeed', formValue.announcementSpeed);
 
     // Theme
     formData.append('themePrimaryColor', formValue.themePrimaryColor);
