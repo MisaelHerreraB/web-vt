@@ -156,9 +156,9 @@ export class ProductService {
         const headers = new HttpHeaders()
             .set('x-tenant-slug', tenant?.slug || '')
             .set('Content-Type', 'application/json');
-        return this.http.request<{ message: string; deletedUrl: string }>('DELETE', `${this.apiUrl}/products/image`, {
+        return this.http.delete<{ message: string; deletedUrl: string }>(`${this.apiUrl}/products/image`, {
             headers,
-            body: { imageUrl }
+            params: { imageUrl }
         }).pipe(
             tap(() => this.clearCache())
         );

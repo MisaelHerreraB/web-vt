@@ -398,7 +398,7 @@ const PAYMENT_PROVIDERS = [
            </h2>
            <p class="text-sm text-gray-600 mb-6">Activa esta opción para mostrar un botón en cada producto que permita a mayoristas contactarte directamente por WhatsApp.</p>
            
-           <div class="flex items-center justify-between p-4 border rounded-lg hover:border-terra/30 transition-colors">
+           <div class="flex items-center justify-between p-4 border rounded-lg hover:border-terra/30 transition-colors mb-4">
                <div>
                    <label class="block text-sm font-bold text-gray-900">Habilitar Ventas al por Mayor</label>
                    <p class="text-xs text-gray-500 mt-1">Los clientes verán un botón "Pedido al por Mayor" en la página de productos</p>
@@ -407,6 +407,18 @@ const PAYMENT_PROVIDERS = [
                     <input type="checkbox" formControlName="wholesaleEnabled" class="w-5 h-5 text-terra rounded focus:ring-terra">
                </div>
            </div>
+
+           @if (form.get('wholesaleEnabled')?.value) {
+                <div class="flex items-center justify-between p-4 border rounded-lg hover:border-terra/30 transition-colors animate-fadeIn ml-4 bg-gray-50/50">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-900">Mostrar etiqueta "Precio Minorista"</label>
+                        <p class="text-xs text-gray-500 mt-1">Muestra un texto aclaratorio sobre el precio normal del producto</p>
+                    </div>
+                    <div class="flex items-center">
+                            <input type="checkbox" formControlName="showRetailPriceLabel" class="w-5 h-5 text-terra rounded focus:ring-terra">
+                    </div>
+                </div>
+           }
         </div>
 
         <!-- Stock Control Configuration -->
@@ -598,6 +610,7 @@ export class TenantSettingsComponent implements OnInit {
       themePrimaryColor: ['#b24343'],
       themeSecondaryColor: ['#f4e1d2'],
       wholesaleEnabled: [false],
+      showRetailPriceLabel: [true],
       useStockControl: [true], // Stock control enabled by default
       paymentMethods: this.fb.array([])
     });
@@ -678,6 +691,7 @@ export class TenantSettingsComponent implements OnInit {
       themePrimaryColor: tenant.themePrimaryColor || '#b24343',
       themeSecondaryColor: tenant.themeSecondaryColor || '#f4e1d2',
       wholesaleEnabled: tenant.wholesaleEnabled || false,
+      showRetailPriceLabel: tenant.showRetailPriceLabel !== undefined ? tenant.showRetailPriceLabel : true,
       useStockControl: tenant.useStockControl !== undefined ? tenant.useStockControl : true // Default to true
     });
 
@@ -842,6 +856,7 @@ export class TenantSettingsComponent implements OnInit {
 
     // Wholesale
     formData.append('wholesaleEnabled', String(formValue.wholesaleEnabled));
+    formData.append('showRetailPriceLabel', String(formValue.showRetailPriceLabel));
 
     // Stock Control
     formData.append('useStockControl', String(formValue.useStockControl));

@@ -43,6 +43,7 @@ export interface Tenant {
     themePrimaryColor?: string;
     themeSecondaryColor?: string;
     wholesaleEnabled?: boolean;
+    showRetailPriceLabel?: boolean;
     useStockControl?: boolean; // Global stock control setting
 }
 

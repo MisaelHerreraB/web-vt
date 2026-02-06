@@ -184,7 +184,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
             
                     <!-- Price Section with Label -->
                     <div class="mb-4 pb-4 border-b border-gray-100">
-                        @if (tenant?.wholesaleEnabled) {
+                        @if (tenant?.wholesaleEnabled && tenant?.showRetailPriceLabel) {
                             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Precio Minorista</span>
                         }
                         <div class="flex items-baseline gap-4">
