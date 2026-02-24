@@ -11,11 +11,13 @@ import { tap } from 'rxjs/operators';
 interface VariantOptionValueDraft {
     name: string;
     price: number;
+    order?: number;
 }
 
 interface VariantOptionDraft {
     name: string; // e.g. "Tipo de Masa"
     values: VariantOptionValueDraft[];
+    order?: number;
 }
 
 interface VariantDraft {
@@ -23,6 +25,7 @@ interface VariantDraft {
     value: string; // e.g., "M", "Red"
     price: number;
     stock: number;
+    order?: number;
     imageIndexes?: number[]; // Indexes of images assigned to this variant
     options?: VariantOptionDraft[]; // Nested options
 }
@@ -241,6 +244,28 @@ interface VariantDraft {
                 <div class="space-y-6">
                     @for (variant of variants; track $index; let variantIndex = $index) {
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
+                            <!-- Variant Header with Reorder + Delete -->
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Variante {{ variantIndex + 1 }}</span>
+                                <div class="flex items-center gap-1">
+                                    <!-- Move Up -->
+                                    <button type="button" (click)="moveVariantUp(variantIndex)" [disabled]="variantIndex === 0"
+                                            class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            title="Mover arriba">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                                    </button>
+                                    <!-- Move Down -->
+                                    <button type="button" (click)="moveVariantDown(variantIndex)" [disabled]="variantIndex === variants.length - 1"
+                                            class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            title="Mover abajo">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
+                                    <!-- Delete -->
+                                    <button type="button" (click)="removeVariant(variantIndex)" class="p-1.5 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Eliminar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </div>
+                            </div>
                             <!-- Variant Fields -->
                             <div class="grid grid-cols-12 gap-4 items-end">
                                 <div class="col-span-3">
@@ -251,19 +276,14 @@ interface VariantDraft {
                                     <label class="block text-xs font-bold text-gray-500 mb-1">Valor</label>
                                     <input type="text" [(ngModel)]="variant.value" [name]="'v_val_'+variantIndex" placeholder="M" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-3">
                                     <label class="block text-xs font-bold text-gray-500 mb-1">Precio (Opcional)</label>
                                     <input type="number" [(ngModel)]="variant.price" [name]="'v_price_'+variantIndex" placeholder="0 = Heredado" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
-                                    <p class="text-[10px] text-gray-400 mt-0.5">Si se deja en 0, usa el precio base.</p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">0 = usa precio base.</p>
                                 </div>
-                                <div class="col-span-2">
+                                <div class="col-span-3">
                                     <label class="block text-xs font-bold text-gray-500 mb-1">Stock</label>
                                     <input type="number" [(ngModel)]="variant.stock" [name]="'v_st_'+variantIndex" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
-                                </div>
-                                <div class="col-span-2 flex justify-end">
-                                    <button type="button" (click)="removeVariant(variantIndex)" class="text-red-500 hover:text-red-700 p-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    </button>
                                 </div>
                             </div>
 
@@ -322,7 +342,7 @@ interface VariantDraft {
                                     <div class="space-y-4">
                                         @for (option of variant.options; track optIndex; let optIndex = $index) {
                                             <div class="bg-white rounded border border-gray-200 p-3">
-                                                <!-- Option Header -->
+                                                <!-- Option Header with reorder -->
                                                 <div class="flex items-center gap-2 mb-3">
                                                     <div class="flex-1">
                                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre de la Opción</label>
@@ -332,8 +352,21 @@ interface VariantDraft {
                                                                placeholder="Ej: Tipo de Masa" 
                                                                class="w-full px-2 py-1.5 rounded border border-gray-300 text-sm">
                                                     </div>
-                                                    <button type="button" (click)="removeOptionFromVariant(variantIndex, optIndex)" class="text-red-500 hover:text-red-700 p-1 self-end">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                    <!-- Option reorder buttons -->
+                                                    <div class="flex flex-col gap-0.5 self-end mb-0.5">
+                                                        <button type="button" (click)="moveOptionUp(variantIndex, optIndex)" [disabled]="optIndex === 0"
+                                                                class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                                title="Mover arriba">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                                                        </button>
+                                                        <button type="button" (click)="moveOptionDown(variantIndex, optIndex)" [disabled]="optIndex === variant.options!.length - 1"
+                                                                class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                                title="Mover abajo">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                                        </button>
+                                                    </div>
+                                                    <button type="button" (click)="removeOptionFromVariant(variantIndex, optIndex)" class="text-red-400 hover:text-red-600 p-1 self-end mb-0.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                     </button>
                                                 </div>
 
@@ -569,11 +602,33 @@ export class ProductFormComponent implements OnInit {
     }
 
     addVariant() {
-        this.variants.push({ name: 'Talla', value: '', price: 0, stock: 0 });
+        this.variants.push({ name: 'Talla', value: '', price: 0, stock: 0, order: this.variants.length });
     }
 
     removeVariant(index: number) {
         this.variants.splice(index, 1);
+    }
+
+    moveVariantUp(index: number) {
+        if (index === 0) return;
+        [this.variants[index - 1], this.variants[index]] = [this.variants[index], this.variants[index - 1]];
+    }
+
+    moveVariantDown(index: number) {
+        if (index === this.variants.length - 1) return;
+        [this.variants[index + 1], this.variants[index]] = [this.variants[index], this.variants[index + 1]];
+    }
+
+    moveOptionUp(variantIndex: number, optionIndex: number) {
+        const options = this.variants[variantIndex].options!;
+        if (optionIndex === 0) return;
+        [options[optionIndex - 1], options[optionIndex]] = [options[optionIndex], options[optionIndex - 1]];
+    }
+
+    moveOptionDown(variantIndex: number, optionIndex: number) {
+        const options = this.variants[variantIndex].options!;
+        if (optionIndex === options.length - 1) return;
+        [options[optionIndex + 1], options[optionIndex]] = [options[optionIndex], options[optionIndex + 1]];
     }
 
     // Image selection for variants
@@ -671,13 +726,17 @@ export class ProductFormComponent implements OnInit {
             }
 
             // Always send variants, even if empty, to allow deletion of all variants
-            const variantsToSend = this.variants.map(v => ({
+            // Assign order by current array position so the sort is persisted
+            const variantsToSend = this.variants.map((v, vi) => ({
                 ...v,
+                order: vi,
                 price: v.price || 0, // Ensure empty/null becomes 0
-                options: v.options?.map(o => ({
+                options: v.options?.map((o, oi) => ({
                     ...o,
-                    values: o.values.map(val => ({
+                    order: oi,
+                    values: o.values.map((val, vali) => ({
                         ...val,
+                        order: vali,
                         price: val.price || 0 // Ensure empty/null becomes 0
                     }))
                 })),

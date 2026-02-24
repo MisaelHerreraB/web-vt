@@ -11,13 +11,14 @@ import { CategoryNavComponent } from '../components/category-nav/category-nav';
 import { HeaderCompactComponent } from '../components/headers/header-compact';
 import { HeaderOverlayComponent } from '../components/headers/header-overlay';
 import { HeaderMinimalComponent } from '../components/headers/header-minimal';
+import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-button';
 
 
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, CartSummaryComponent, CategoryNavComponent, HeaderCompactComponent, HeaderOverlayComponent, HeaderMinimalComponent, CartDrawerComponent],
+  imports: [CommonModule, RouterLink, CartSummaryComponent, CategoryNavComponent, HeaderCompactComponent, HeaderOverlayComponent, HeaderMinimalComponent, CartDrawerComponent, WhatsappButtonComponent],
   // ... template unchanged ...
   template: `
     <div class="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20">
@@ -160,9 +161,9 @@ import { HeaderMinimalComponent } from '../components/headers/header-minimal';
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
           @for (product of products; track product.id) {
-            <div class="group relative flex flex-col h-full bg-white rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
+            <div class="group relative flex flex-col h-full bg-white rounded-md cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
               <!-- Card Image -->
-              <div class="aspect-[3/4] bg-gray-100 overflow-hidden relative rounded-2xl mx-2 mt-2">
+              <div class="aspect-[3/4] bg-gray-100 overflow-hidden relative rounded-md mx-2 mt-2">
                  <img [src]="product.images?.[0] || product.imageUrl || 'https://placehold.co/400x500/f4e1d2/b24343?text=NO+IMAGE'" 
                      [alt]="product.title"
                      class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110">
@@ -236,6 +237,9 @@ import { HeaderMinimalComponent } from '../components/headers/header-minimal';
       
       <!-- Cart Drawer -->
       <app-cart-drawer></app-cart-drawer>
+
+      <!-- WhatsApp Floating Button -->
+      <app-whatsapp-button [tenant]="tenant"></app-whatsapp-button>
     </div>
   `
 })

@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges, inject, ChangeDetectorRef, PLATFORM_ID, HostListener } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 
 
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -11,11 +12,12 @@ import { CartService } from '../services/cart.service';
 import { CartDrawerComponent } from '../components/cart-drawer/cart-drawer.component';
 import { CartSummaryComponent } from '../components/cart-summary/cart-summary';
 import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
+import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-button';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent, FormatDescriptionPipe],
+  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent, FormatDescriptionPipe, WhatsappButtonComponent],
   template: `
     <div class="min-h-screen bg-gray-50 font-sans text-gray-800 pb-32">
       <!-- Consistent Header with Home -->
@@ -78,7 +80,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                 <!-- Image Gallery Column -->
                 <div class="md:sticky md:top-24 space-y-4">
                     <!-- Main Image Display -->
-                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden aspect-[3/4] md:aspect-[4/5] relative group"
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden aspect-[3/4] md:aspect-[4/5] relative group"
                          (touchstart)="onTouchStart($event)"
                          (touchend)="onTouchEnd($event)">
                         <img [src]="getCurrentImage()" 
@@ -202,19 +204,19 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                     <!-- Wholesale Inquiry Banner - Compact Version -->
                     @if (tenant?.wholesaleEnabled) {
                         <button (click)="contactForWholesale()" 
-                                class="w-full mb-4 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-300 rounded-lg p-3 transition-all group flex items-center justify-between">
+                                class="w-full mb-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 transition-all group flex items-center justify-between">
                             <div class="flex items-center gap-2.5">
-                                <div class="bg-gradient-to-br from-amber-500 to-orange-500 p-2 rounded-lg group-hover:scale-105 transition-transform">
+                                <div class="bg-gray-800 p-2 rounded-lg group-hover:scale-105 transition-transform">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
                                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                                         <circle cx="12" cy="10" r="3"/>
                                     </svg>
                                 </div>
                                 <div class="text-left">
-                                    <p class="text-xs font-bold text-gray-900 leading-tight">¿Compras al por mayor? <span class="text-amber-700">Consultar aquí</span></p>
+                                    <p class="text-xs font-bold text-gray-900 leading-tight">¿Compras al por mayor? <span class="text-gray-600 font-medium">Consultar aquí</span></p>
                                 </div>
                             </div>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-600 group-hover:translate-x-1 transition-transform flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400 group-hover:translate-x-1 transition-transform flex-shrink-0">
                                 <polyline points="9 18 15 12 9 6"/>
                             </svg>
                         </button>
@@ -240,42 +242,77 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                         </div>
                     }
 
-                    <!-- Variants (New Minimal Style) -->
+                    <!-- Variants -->
                     @if (product.variants && product.variants.length > 0) {
-                        <div class="mb-6">
-                            <h3 class="text-xs font-bold uppercase text-gray-500 tracking-wider mb-3">Opción</h3>
-                            <div class="flex flex-wrap gap-3">
+                        <div class="mb-6" id="variant-selector">
+                            <!-- Label row -->
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-xs font-bold uppercase text-gray-400 tracking-widest">Opción</h3>
+                                @if (showVariantAlert) {
+                                    <span class="text-xs font-semibold text-red-500 flex items-center gap-1 animate-fade-in">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        Selecciona una opción
+                                    </span>
+                                }
+                            </div>
+
+                            <!-- Variant buttons -->
+                            <div class="flex flex-wrap gap-2"
+                                 [class.variant-shake]="showVariantAlert">
                                 @for (variant of product.variants; track variant.id) {
                                     <button (click)="selectVariant(variant)"
-                                            [class.bg-gray-900]="selectedVariant?.id === variant.id"
-                                            [class.text-white]="selectedVariant?.id === variant.id"
-                                            [class.bg-gray-100]="selectedVariant?.id !== variant.id"
-                                            [class.text-gray-900]="selectedVariant?.id !== variant.id"
-                                            [class.hover:bg-gray-200]="selectedVariant?.id !== variant.id"
-                                            class="px-6 h-10 rounded-lg transition-all text-sm font-bold min-w-[3rem] shadow-sm transform active:scale-95">
+                                            class="relative h-10 px-5 rounded-md text-sm font-semibold transition-all duration-150 border-2 select-none"
+                                            [class.border-gray-900]="selectedVariant?.id === variant.id"
+                                            [class.text-gray-900]="selectedVariant?.id === variant.id"
+                                            [class.bg-white]="selectedVariant?.id === variant.id"
+                                            [class.border-gray-200]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                            [class.border-red-300]="showVariantAlert && selectedVariant?.id !== variant.id"
+                                            [class.text-gray-500]="selectedVariant?.id !== variant.id"
+                                            [class.bg-white]="selectedVariant?.id !== variant.id"
+                                            [class.hover:border-gray-400]="selectedVariant?.id !== variant.id"
+                                            [class.hover:text-gray-800]="selectedVariant?.id !== variant.id">
+                                        <!-- Selected checkmark dot -->
+                                        @if (selectedVariant?.id === variant.id) {
+                                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center shadow-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            </span>
+                                        }
                                         {{ variant.value }}
                                     </button>
                                 }
                             </div>
                         </div>
 
-                        <!-- Sub-Variants Sections -->
+                        <!-- Sub-options -->
                         @if (selectedVariant?.options && selectedVariant!.options!.length > 0) {
-                            <div class="mb-6 mt-4">
+                            <div class="mb-6 space-y-5">
                                 @for (option of selectedVariant?.options; track option.id) {
-                                    <div class="mb-4">
-                                        <p class="text-xs font-bold uppercase text-gray-500 tracking-wider mb-2">{{ option.name }}</p>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2.5">
+                                            <p class="text-xs font-bold uppercase text-gray-400 tracking-widest">{{ option.name }}</p>
+                                            @if (selectedOptions[option.name]) {
+                                                <span class="text-xs text-gray-600 font-medium">— {{ selectedOptions[option.name].name }}</span>
+                                            }
+                                        </div>
                                         <div class="flex flex-wrap gap-2">
                                             @for (val of option.values; track val.id) {
                                                 <button (click)="selectOption(option.name, val)"
-                                                        [class.bg-gray-100]="selectedOptions[option.name]?.id !== val.id"
-                                                        [class.text-gray-900]="selectedOptions[option.name]?.id !== val.id"
-                                                        [class.bg-terra]="selectedOptions[option.name]?.id === val.id"
-                                                        [class.text-white]="selectedOptions[option.name]?.id === val.id"
-                                                        class="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-gray-200 active:scale-95">
+                                                        class="relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-150 border-2 select-none"
+                                                        [class.border-gray-900]="selectedOptions[option.name]?.id === val.id"
+                                                        [class.text-gray-900]="selectedOptions[option.name]?.id === val.id"
+                                                        [class.font-semibold]="selectedOptions[option.name]?.id === val.id"
+                                                        [class.border-gray-200]="selectedOptions[option.name]?.id !== val.id"
+                                                        [class.text-gray-500]="selectedOptions[option.name]?.id !== val.id"
+                                                        [class.hover:border-gray-400]="selectedOptions[option.name]?.id !== val.id"
+                                                        [class.hover:text-gray-800]="selectedOptions[option.name]?.id !== val.id">
+                                                    @if (selectedOptions[option.name]?.id === val.id) {
+                                                        <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center shadow-sm">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        </span>
+                                                    }
                                                     {{ val.name }}
                                                     @if (val.price > 0) {
-                                                        <span class="ml-1 text-xs opacity-80">({{ val.price | currency: getSymbol(tenant?.currency) }})</span>
+                                                        <span class="ml-1 text-xs opacity-60">(+{{ val.price | currency: getSymbol(tenant?.currency) }})</span>
                                                     }
                                                 </button>
                                             }
@@ -285,6 +322,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                             </div>
                         }
                     }
+
 
                     <!-- Actions Area -->
                     <div class="space-y-4 mb-4">
@@ -310,45 +348,26 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                              }
                         </div>
 
-                        <!-- Main Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <button (click)="addToCart()" 
-                                    [disabled]="(product.variants?.length && !selectedVariant) || isOutOfStock"
-                                    [class.bg-gray-300]="isOutOfStock"
-                                    [class.border-gray-300]="isOutOfStock"
-                                    [class.text-gray-500]="isOutOfStock"
-                                    [class.cursor-not-allowed]="isOutOfStock"
-                                    [class.bg-white]="!isOutOfStock"
-                                    [class.border-gray-900]="!isOutOfStock"
-                                    [class.text-gray-900]="!isOutOfStock"
-                                    [class.hover:bg-gray-50]="!isOutOfStock"
-                                    class="flex-1 py-4 border-2 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
-                                @if (isOutOfStock) {
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                    <span>Agotado</span>
-                                } @else {
-                                    <span>Agregar</span>
-                                }
-                            </button>
-                            
-                            <button (click)="buyNow()" 
-                                    [disabled]="(product.variants?.length && !selectedVariant) || isOutOfStock"
-                                    [class.bg-gray-400]="isOutOfStock"
-                                    [class.text-gray-600]="isOutOfStock"
-                                    [class.cursor-not-allowed]="isOutOfStock"
-                                    [class.bg-gray-900]="!isOutOfStock"
-                                    [class.text-white]="!isOutOfStock"
-                                    [class.hover:bg-black]="!isOutOfStock"
-                                    [class.hover:shadow-xl]="!isOutOfStock"
-                                    class="flex-[2] py-4 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
-                                @if (isOutOfStock) {
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                    <span>Sin Stock</span>
-                                } @else {
-                                    <span>Comprar Ahora</span>
-                                }
-                            </button>
-                        </div>
+                        <!-- Main Action Button -->
+                        <button (click)="addToCart()" 
+                                [disabled]="isOutOfStock"
+                                [class.bg-gray-300]="isOutOfStock"
+                                [class.border-gray-300]="isOutOfStock"
+                                [class.text-gray-400]="isOutOfStock"
+                                [class.cursor-not-allowed]="isOutOfStock"
+                                [class.bg-gray-900]="!isOutOfStock"
+                                [class.text-white]="!isOutOfStock"
+                                [class.hover:bg-black]="!isOutOfStock"
+                                [class.hover:shadow-xl]="!isOutOfStock"
+                                class="w-full py-4 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
+                            @if (isOutOfStock) {
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <span>Agotado</span>
+                            } @else {
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                <span>Agregar al carrito</span>
+                            }
+                        </button>
 
                         <!-- WhatsApp Consultation Block (UX Highlight) -->
                         <button (click)="consultWhatsApp()" 
@@ -407,7 +426,7 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Te puede interesar</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     @for (related of relatedProducts; track related.id) {
-                        <div class="group bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" 
+                        <div class="group bg-white rounded-md shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" 
                              [routerLink]="['../', related.id]"
                              (click)="$event.stopPropagation()">
                             <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden">
@@ -496,6 +515,9 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
       <!-- Sticky Cart Summary -->
       <app-cart-summary [tenant]="tenant"></app-cart-summary>
 
+      <!-- WhatsApp Floating Button -->
+      <app-whatsapp-button [tenant]="tenant"></app-whatsapp-button>
+
     </div>
   `,
   styles: [`
@@ -519,6 +541,18 @@ import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
     .animate-fade-in {
       animation: fade-in 0.2s ease-out forwards;
     }
+    @keyframes variant-shake {
+      0%, 100% { transform: translateX(0); }
+      15%       { transform: translateX(-8px); }
+      30%       { transform: translateX(7px); }
+      45%       { transform: translateX(-6px); }
+      60%       { transform: translateX(5px); }
+      75%       { transform: translateX(-3px); }
+      90%       { transform: translateX(2px); }
+    }
+    .variant-shake {
+      animation: variant-shake 0.55s cubic-bezier(.36,.07,.19,.97) both;
+    }
   `]
 })
 export class ProductDetailComponent implements OnInit {
@@ -532,6 +566,8 @@ export class ProductDetailComponent implements OnInit {
   quantity: number = 1;
   linkCopied: boolean = false;
   showFullDescription: boolean = false;
+  showVariantAlert: boolean = false;
+  private variantAlertTimer: any = null;
   currentImageIndex: number = 0;
 
   // Zoom / Lightbox State
@@ -559,6 +595,8 @@ export class ProductDetailComponent implements OnInit {
   private tenantService = inject(TenantService);
   private cdr = inject(ChangeDetectorRef);
   private platformId = inject(PLATFORM_ID);
+  private meta = inject(Meta);
+  private titleService = inject(Title);
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -595,11 +633,22 @@ export class ProductDetailComponent implements OnInit {
       next: (productData) => {
         this.product = productData;
 
+        // Sort variants and nested options by saved order (defensive — API already sorts, but guarantees client-side too)
+        if (this.product?.variants) {
+          this.product.variants.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+          this.product.variants.forEach((v: any) => {
+            if (v.options) v.options.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+          });
+        }
+
         // Reset state for new product
         this.selectedVariant = null;
         this.selectedOptions = {};
         this.quantity = 1;
         this.currentImageIndex = 0;
+
+        // Set Open Graph + Twitter meta tags for WhatsApp / social previews
+        this.setOgTags();
 
         this.cdr.detectChanges();
 
@@ -615,6 +664,37 @@ export class ProductDetailComponent implements OnInit {
       },
       error: (err) => console.error('Error loading product:', err)
     });
+  }
+
+  private setOgTags() {
+    if (!this.product) return;
+
+    const title = this.product.title;
+    const description = (this.product.description || title).replace(/<[^>]*>/g, '').slice(0, 160);
+    const image = this.product.images?.[0] || (this.product as any).imageUrl || '';
+    const url = `https://www.vertienda.app/${this.slug}/p/${this.product.id}`;
+
+    // Page title
+    this.titleService.setTitle(title);
+
+    // Open Graph tags (Facebook, WhatsApp, LinkedIn, Telegram)
+    this.meta.updateTag({ property: 'og:type', content: 'product' });
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:image', content: image });
+    this.meta.updateTag({ property: 'og:image:width', content: '800' });
+    this.meta.updateTag({ property: 'og:image:height', content: '800' });
+    this.meta.updateTag({ property: 'og:url', content: url });
+    this.meta.updateTag({ property: 'og:site_name', content: this.tenant?.name || 'Vertienda' });
+
+    // Twitter / WhatsApp fallback
+    this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+    this.meta.updateTag({ name: 'twitter:image', content: image });
+
+    // Standard description
+    this.meta.updateTag({ name: 'description', content: description });
   }
 
   loadRelatedProducts(category: string, currentProductId: string) {
@@ -692,6 +772,9 @@ export class ProductDetailComponent implements OnInit {
 
   selectVariant(variant: ProductVariant) {
     this.selectedVariant = variant;
+    // Dismiss validation alert
+    this.showVariantAlert = false;
+    if (this.variantAlertTimer) { clearTimeout(this.variantAlertTimer); }
     // Reset image index when changing variant
     this.currentImageIndex = 0;
     // Reset options
@@ -700,6 +783,25 @@ export class ProductDetailComponent implements OnInit {
 
   selectOption(optionName: string, value: any) {
     this.selectedOptions[optionName] = value;
+    this.showVariantAlert = false;
+    if (this.variantAlertTimer) { clearTimeout(this.variantAlertTimer); }
+  }
+
+  triggerVariantAlert() {
+    // Scroll to the variant selector
+    if (isPlatformBrowser(this.platformId)) {
+      const el = document.getElementById('variant-selector');
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }
+    // Show the alert state (triggers shake + red rings + label)
+    this.showVariantAlert = true;
+    // Force re-trigger shake animation by toggling
+    if (this.variantAlertTimer) { clearTimeout(this.variantAlertTimer); }
+    // Auto-dismiss after 3 seconds
+    this.variantAlertTimer = setTimeout(() => {
+      this.showVariantAlert = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   toggleDescription() {
@@ -737,7 +839,7 @@ export class ProductDetailComponent implements OnInit {
   addToCart() {
     if (this.product) {
       if (this.product.variants?.length && !this.selectedVariant) {
-        alert('Por favor selecciona una opción (Talla/Color) antes de agregar.');
+        this.triggerVariantAlert();
         return;
       }
 
@@ -745,14 +847,13 @@ export class ProductDetailComponent implements OnInit {
       if (this.selectedVariant && this.selectedVariant.options) {
         for (const option of this.selectedVariant.options) {
           if (!this.selectedOptions[option.name]) {
-            alert(`Por favor selecciona: ${option.name}`);
+            this.triggerVariantAlert();
             return;
           }
         }
       }
 
       if (this.isOutOfStock) {
-        alert('Este producto está agotado.');
         return;
       }
 
@@ -788,12 +889,7 @@ export class ProductDetailComponent implements OnInit {
     }
   }
 
-  buyNow() {
-    // Add to cart first
-    this.addToCart();
-    // Drawer automatically opens in addToCart, so no need for extra logic
-    // The drawer has the checkout button
-  }
+
 
   shareWhatsApp() {
     if (this.product) {

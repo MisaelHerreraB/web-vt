@@ -325,6 +325,68 @@ const PAYMENT_PROVIDERS = [
               </div>
            </div>
         </div>
+
+        <!-- WhatsApp Advisors Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32" class="text-[#25D366]" fill="currentColor">
+                        <path d="M16 2C8.28 2 2 8.28 2 16c0 2.48.68 4.8 1.86 6.8L2 30l7.42-1.84A13.93 13.93 0 0 0 16 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.4a11.54 11.54 0 0 1-5.98-1.66l-.42-.26-4.4 1.1 1.12-4.28-.28-.44A11.4 11.4 0 0 1 4.6 16C4.6 9.72 9.72 4.6 16 4.6S27.4 9.72 27.4 16 22.28 27.4 16 27.4zm6.36-8.46c-.34-.18-2.02-1-2.34-1.1-.32-.12-.56-.18-.8.18-.24.34-.92 1.1-1.12 1.34-.2.22-.42.26-.76.08-.34-.18-1.44-.52-2.74-1.66-.98-.9-1.66-2-1.86-2.34-.2-.34 0-.52.14-.7.14-.16.34-.42.52-.62.18-.2.22-.36.34-.6.12-.22.06-.42-.02-.6-.08-.18-.8-1.9-1.08-2.6-.28-.68-.56-.58-.8-.58h-.68c-.22 0-.6.08-.92.42-.32.34-1.22 1.2-1.22 2.9s1.24 3.36 1.42 3.6c.18.22 2.44 3.72 5.9 5.22.82.36 1.46.56 1.96.72.82.26 1.56.22 2.16.14.66-.1 2.02-.82 2.3-1.62.28-.8.28-1.48.2-1.62-.08-.14-.3-.22-.64-.4z"/>
+                    </svg>
+                    Asesores de WhatsApp
+                </h2>
+                <button type="button" (click)="addAdvisor()"
+                        [disabled]="advisors.length >= 10"
+                        class="text-sm font-bold text-terra hover:text-terra-800 flex items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Añadir Asesor
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mb-6">Un botón flotante de WhatsApp aparecerá en tu tienda. Con 1 asesor va directo al chat; con 2 o más muestra una lista para elegir. Máximo 10.</p>
+
+            <div formArrayName="advisors" class="space-y-3">
+                @for (advisor of advisors.controls; track $index) {
+                    <div [formGroupName]="$index" class="border border-gray-200 rounded-xl p-4 bg-gray-50/60 relative group">
+                        <!-- Remove -->
+                        <button type="button" (click)="removeAdvisor($index)"
+                                class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-6">
+                            <!-- Name -->
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Nombre <span class="text-red-400">*</span></label>
+                                <input type="text" formControlName="name" placeholder="Ej: María García"
+                                       class="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-terra focus:border-terra outline-none">
+                            </div>
+                            <!-- Phone -->
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Teléfono (con código) <span class="text-red-400">*</span></label>
+                                <input type="text" formControlName="phone" placeholder="51987654321"
+                                       class="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-terra focus:border-terra outline-none font-mono">
+                                <p class="text-[10px] text-gray-400">Sin + ni espacios. Incluye código de país.</p>
+                            </div>
+                            <!-- Role -->
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-gray-500 uppercase">Cargo / Rol (Opcional)</label>
+                                <input type="text" formControlName="role" placeholder="Ej: Ventas al por mayor"
+                                       class="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:ring-terra focus:border-terra outline-none">
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (advisors.length === 0) {
+                    <div class="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" class="mx-auto mb-2 opacity-40" fill="currentColor">
+                            <path d="M16 2C8.28 2 2 8.28 2 16c0 2.48.68 4.8 1.86 6.8L2 30l7.42-1.84A13.93 13.93 0 0 0 16 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.4a11.54 11.54 0 0 1-5.98-1.66l-.42-.26-4.4 1.1 1.12-4.28-.28-.44A11.4 11.4 0 0 1 4.6 16C4.6 9.72 9.72 4.6 16 4.6S27.4 9.72 27.4 16 22.28 27.4 16 27.4z"/>
+                        </svg>
+                        <p class="text-sm">No hay asesores configurados</p>
+                        <button type="button" (click)="addAdvisor()" class="text-terra font-bold text-sm mt-1 hover:underline">Añadir el primero</button>
+                    </div>
+                }
+            </div>
+        </div>
         
         <!-- Payment Methods Section -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
@@ -612,7 +674,8 @@ export class TenantSettingsComponent implements OnInit {
       wholesaleEnabled: [false],
       showRetailPriceLabel: [true],
       useStockControl: [true], // Stock control enabled by default
-      paymentMethods: this.fb.array([])
+      paymentMethods: this.fb.array([]),
+      advisors: this.fb.array([])
     });
 
     // Slug validation debounce
@@ -625,6 +688,10 @@ export class TenantSettingsComponent implements OnInit {
 
   get paymentMethods() {
     return this.form.get('paymentMethods') as FormArray;
+  }
+
+  get advisors() {
+    return this.form.get('advisors') as FormArray;
   }
 
   ngOnInit() {
@@ -698,6 +765,9 @@ export class TenantSettingsComponent implements OnInit {
     // Init Payment Methods
     this.initPaymentMethods(tenant.paymentMethods || []);
 
+    // Init Advisors
+    this.initAdvisors((tenant as any).advisors || []);
+
     this.logoPreview = tenant.logoUrl || null;
     this.coverPreview = tenant.coverUrl || null;
 
@@ -745,6 +815,33 @@ export class TenantSettingsComponent implements OnInit {
 
   removePaymentMethod(index: number) {
     this.paymentMethods.removeAt(index);
+    this.form.markAsDirty();
+  }
+
+  createAdvisorGroup(data?: any): FormGroup {
+    return this.fb.group({
+      name: [data?.name || '', Validators.required],
+      phone: [data?.phone || '', Validators.required],
+      role: [data?.role || '']
+    });
+  }
+
+  initAdvisors(list: any[] | string) {
+    this.advisors.clear();
+    let arr: any[] = [];
+    if (typeof list === 'string') { try { arr = JSON.parse(list); } catch { arr = []; } }
+    else if (Array.isArray(list)) { arr = list; }
+    arr.forEach(a => this.advisors.push(this.createAdvisorGroup(a)));
+  }
+
+  addAdvisor() {
+    if (this.advisors.length >= 10) return;
+    this.advisors.push(this.createAdvisorGroup());
+    this.form.markAsDirty();
+  }
+
+  removeAdvisor(index: number) {
+    this.advisors.removeAt(index);
     this.form.markAsDirty();
   }
 
@@ -863,6 +960,9 @@ export class TenantSettingsComponent implements OnInit {
 
     // Payment methods as JSON string
     formData.append('paymentMethods', JSON.stringify(formValue.paymentMethods));
+
+    // Advisors as JSON string
+    formData.append('advisors', JSON.stringify(formValue.advisors));
 
     // Add files if selected
     if (this.selectedLogo) {
