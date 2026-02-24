@@ -240,6 +240,14 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
 
       <!-- WhatsApp Floating Button -->
       <app-whatsapp-button [tenant]="tenant"></app-whatsapp-button>
+
+      <!-- reCAPTCHA compliance (required when badge is hidden) -->
+      <p class="text-center text-[10px] text-gray-300 py-4 px-4">
+        Este sitio está protegido por reCAPTCHA de Google.
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline hover:text-gray-400">Política de privacidad</a>
+        y
+        <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline hover:text-gray-400">Términos de servicio</a>.
+      </p>
     </div>
   `
 })

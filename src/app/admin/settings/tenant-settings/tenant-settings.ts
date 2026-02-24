@@ -388,6 +388,50 @@ const PAYMENT_PROVIDERS = [
             </div>
         </div>
         
+        <!-- Opening Hours Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-terra"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Horarios de Atención
+            </h2>
+            <p class="text-sm text-gray-500 mb-6">Configura los días y horas en que tu tienda está abierta. Se mostrará en el perfil de la tienda.</p>
+
+            <div formArrayName="openingHours" class="space-y-2">
+                @for (dayCtrl of openingHours.controls; track $index) {
+                    <div [formGroupName]="$index"
+                         class="grid grid-cols-[1fr_auto] sm:grid-cols-[140px_1fr_auto] gap-3 items-center p-3 rounded-lg border transition-colors"
+                         [class.border-gray-100]="!dayCtrl.get('isOpen')?.value"
+                         [class.bg-gray-50]="!dayCtrl.get('isOpen')?.value"
+                         [class.border-gray-200]="dayCtrl.get('isOpen')?.value"
+                         [class.bg-white]="dayCtrl.get('isOpen')?.value">
+
+                        <!-- Day name -->
+                        <span class="text-sm font-semibold text-gray-700"
+                              [class.text-gray-400]="!dayCtrl.get('isOpen')?.value">{{ dayCtrl.get('day')?.value }}</span>
+
+                        <!-- Times -->
+                        @if (dayCtrl.get('isOpen')?.value) {
+                            <div class="flex items-center gap-2 text-sm">
+                                <input type="time" formControlName="open"
+                                       class="px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-terra focus:border-terra outline-none">
+                                <span class="text-gray-400">—</span>
+                                <input type="time" formControlName="close"
+                                       class="px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-terra focus:border-terra outline-none">
+                            </div>
+                        } @else {
+                            <span class="text-xs text-gray-400 italic">Cerrado</span>
+                        }
+
+                        <!-- Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" formControlName="isOpen" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-terra"></div>
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
         <!-- Payment Methods Section -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
             <div class="flex items-center justify-between mb-6">
@@ -568,6 +612,47 @@ const PAYMENT_PROVIDERS = [
            </div>
         </div>
 
+        <!-- Welcome Popup Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-terra"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Anuncio de Bienvenida
+            </h2>
+            <p class="text-sm text-gray-500 mb-6">Muestra un mensaje emergente cuando los clientes visitan tu tienda por primera vez.</p>
+
+            <div class="space-y-5">
+                <!-- Toggle -->
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-900">Activar popup de bienvenida</p>
+                        <p class="text-sm text-gray-500">Aparece una vez por sesión cuando el cliente entra a la tienda</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" formControlName="welcomePopupEnabled" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terra"></div>
+                    </label>
+                </div>
+
+                @if (form.get('welcomePopupEnabled')?.value) {
+                    <div class="space-y-4 animate-fadeIn">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Título del Popup</label>
+                            <input type="text" formControlName="welcomePopupTitle"
+                                   placeholder="Ej: ¡Bienvenido a nuestra tienda!"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-terra focus:border-terra outline-none transition-all">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Mensaje</label>
+                            <textarea formControlName="welcomePopupContent" rows="4"
+                                      placeholder="Ej: Tenemos envíos a todo el país. ¡Aprovecha nuestras ofertas especiales!"
+                                      class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-terra focus:border-terra outline-none resize-none transition-all"></textarea>
+                            <p class="text-xs text-gray-500">Este mensaje aparecerá en un popup la primera vez que el cliente abra tu tienda en cada sesión.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
         <!-- Success Modal -->
       @if (showSuccessModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
@@ -673,9 +758,13 @@ export class TenantSettingsComponent implements OnInit {
       themeSecondaryColor: ['#f4e1d2'],
       wholesaleEnabled: [false],
       showRetailPriceLabel: [true],
-      useStockControl: [true], // Stock control enabled by default
+      useStockControl: [true],
+      welcomePopupEnabled: [false],
+      welcomePopupTitle: [''],
+      welcomePopupContent: [''],
       paymentMethods: this.fb.array([]),
-      advisors: this.fb.array([])
+      advisors: this.fb.array([]),
+      openingHours: this.fb.array([])
     });
 
     // Slug validation debounce
@@ -692,6 +781,31 @@ export class TenantSettingsComponent implements OnInit {
 
   get advisors() {
     return this.form.get('advisors') as FormArray;
+  }
+
+  get openingHours() {
+    return this.form.get('openingHours') as FormArray;
+  }
+
+  createDayGroup(data?: any): FormGroup {
+    return this.fb.group({
+      day: [data?.day || ''],
+      open: [data?.open || '09:00'],
+      close: [data?.close || '18:00'],
+      isOpen: [data?.isOpen !== undefined ? data.isOpen : true]
+    });
+  }
+
+  initOpeningHours(hours: any[]) {
+    const DEFAULT_DAYS = [
+      'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'
+    ];
+    this.openingHours.clear();
+    if (hours && hours.length > 0) {
+      hours.forEach(h => this.openingHours.push(this.createDayGroup(h)));
+    } else {
+      DEFAULT_DAYS.forEach(day => this.openingHours.push(this.createDayGroup({ day, isOpen: day !== 'Domingo' })));
+    }
   }
 
   ngOnInit() {
@@ -759,7 +873,10 @@ export class TenantSettingsComponent implements OnInit {
       themeSecondaryColor: tenant.themeSecondaryColor || '#f4e1d2',
       wholesaleEnabled: tenant.wholesaleEnabled || false,
       showRetailPriceLabel: tenant.showRetailPriceLabel !== undefined ? tenant.showRetailPriceLabel : true,
-      useStockControl: tenant.useStockControl !== undefined ? tenant.useStockControl : true // Default to true
+      useStockControl: tenant.useStockControl !== undefined ? tenant.useStockControl : true,
+      welcomePopupEnabled: tenant.welcomePopupEnabled || false,
+      welcomePopupTitle: tenant.welcomePopupTitle || '',
+      welcomePopupContent: tenant.welcomePopupContent || ''
     });
 
     // Init Payment Methods
@@ -767,6 +884,9 @@ export class TenantSettingsComponent implements OnInit {
 
     // Init Advisors
     this.initAdvisors((tenant as any).advisors || []);
+
+    // Init Opening Hours
+    this.initOpeningHours(tenant.openingHours || []);
 
     this.logoPreview = tenant.logoUrl || null;
     this.coverPreview = tenant.coverUrl || null;
@@ -963,6 +1083,14 @@ export class TenantSettingsComponent implements OnInit {
 
     // Advisors as JSON string
     formData.append('advisors', JSON.stringify(formValue.advisors));
+
+    // Opening Hours as JSON string
+    formData.append('openingHours', JSON.stringify(formValue.openingHours));
+
+    // Welcome Popup
+    formData.append('welcomePopupEnabled', String(formValue.welcomePopupEnabled));
+    if (formValue.welcomePopupTitle) formData.append('welcomePopupTitle', formValue.welcomePopupTitle);
+    if (formValue.welcomePopupContent) formData.append('welcomePopupContent', formValue.welcomePopupContent);
 
     // Add files if selected
     if (this.selectedLogo) {
