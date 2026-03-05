@@ -11,6 +11,7 @@ import { tap } from 'rxjs/operators';
 interface VariantOptionValueDraft {
     name: string;
     price: number;
+    stock?: number;
     order?: number;
 }
 
@@ -20,16 +21,21 @@ interface VariantOptionDraft {
     order?: number;
 }
 
-interface VariantDraft {
-    name: string; // e.g., "Size", "Color"
-    value: string; // e.g., "M", "Red"
+// One VALUE within a variant group (e.g. "Rojo" in the "Color" group)
+interface VariantValueDraft {
+    value: string;            // e.g. "Rojo", "M"
     price: number;
     stock: number;
-    order?: number;
-    imageIndexes?: number[]; // Indexes of images assigned to this variant
-    options?: VariantOptionDraft[]; // Nested options
-    displayType?: 'button' | 'color'; // 'button' = text button, 'color' = color swatch
-    color?: string; // Hex color for swatch, e.g. "#1A56DB"
+    imageIndexes?: number[];
+    color?: string;           // hex color for swatch (when displayType='color')
+    options?: VariantOptionDraft[]; // sub-options specific to THIS value (e.g. Tallas disponibles para ESTE color)
+}
+
+// One GROUP of variants sharing the same name (e.g. all "Color" variants)
+interface VariantGroupDraft {
+    name: string;             // e.g. "Color", "Talla"
+    displayType: 'button' | 'color';
+    values: VariantValueDraft[];
 }
 
 @Component({
@@ -240,239 +246,242 @@ interface VariantDraft {
             <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-6">
                 <div class="flex justify-between items-center border-b border-gray-100 pb-2">
                     <h3 class="text-lg font-bold text-gray-900">Variantes (Opcional)</h3>
-                    <button type="button" (click)="addVariant()" class="text-sm text-terra font-bold hover:underline">+ Agregar Variante</button>
+                    <button type="button" (click)="addVariantGroup()" class="text-sm text-terra font-bold hover:underline">+ Agregar Grupo de Variantes</button>
                 </div>
+                <p class="text-xs text-gray-400 -mt-2">Cada grupo tiene un nombre (ej: "Color") y puede tener varios valores (ej: "Rojo", "Azul").</p>
 
                 <div class="space-y-6">
-                    @for (variant of variants; track $index; let variantIndex = $index) {
+                    @for (group of variantGroups; track $index; let gi = $index) {
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
-                            <!-- Variant Header with Reorder + Delete -->
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Variante {{ variantIndex + 1 }}</span>
-                                <div class="flex items-center gap-1">
-                                    <!-- Move Up -->
-                                    <button type="button" (click)="moveVariantUp(variantIndex)" [disabled]="variantIndex === 0"
-                                            class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                            title="Mover arriba">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                            <!-- Group Header -->
+                            <div class="flex items-center gap-3">
+                                <!-- Move Up/Down -->
+                                <div class="flex flex-col gap-0.5">
+                                    <button type="button" (click)="moveGroupUp(gi)" [disabled]="gi === 0"
+                                            class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
                                     </button>
-                                    <!-- Move Down -->
-                                    <button type="button" (click)="moveVariantDown(variantIndex)" [disabled]="variantIndex === variants.length - 1"
-                                            class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                            title="Mover abajo">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                    </button>
-                                    <!-- Delete -->
-                                    <button type="button" (click)="removeVariant(variantIndex)" class="p-1.5 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Eliminar">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    <button type="button" (click)="moveGroupDown(gi)" [disabled]="gi === variantGroups.length - 1"
+                                            class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                                     </button>
                                 </div>
-                            </div>
-                            <!-- Variant Fields -->
-                            <div class="grid grid-cols-12 gap-4 items-end">
-                                <div class="col-span-3">
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Nombre</label>
-                                    <input type="text" [(ngModel)]="variant.name" [name]="'v_name_'+variantIndex" placeholder="Talla" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
+                                <!-- Group Name -->
+                                <div class="flex-1">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre del Grupo</label>
+                                    <input type="text" [(ngModel)]="group.name" [name]="'grp_name_'+gi"
+                                           placeholder="Ej: Color, Talla, Sabor"
+                                           class="w-full px-3 py-2 rounded border border-gray-300 text-sm font-semibold">
                                 </div>
-                                <div class="col-span-3">
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Valor</label>
-                                    <input type="text" [(ngModel)]="variant.value" [name]="'v_val_'+variantIndex" placeholder="M" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
-                                </div>
-                                <div class="col-span-3">
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Precio (Opcional)</label>
-                                    <input type="number" [(ngModel)]="variant.price" [name]="'v_price_'+variantIndex" placeholder="0 = Heredado" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
-                                    <p class="text-[10px] text-gray-400 mt-0.5">0 = usa precio base.</p>
-                                </div>
-                                <div class="col-span-3">
-                                    <label class="block text-xs font-bold text-gray-500 mb-1">Stock</label>
-                                    <input type="number" [(ngModel)]="variant.stock" [name]="'v_st_'+variantIndex" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
-                                </div>
-                            </div>
-
-                            <!-- Display Style Selector -->
-                            <div class="border border-gray-200 rounded-lg p-3 bg-white">
-                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Estilo de Visualización</label>
-                                <div class="flex items-center gap-3">
-                                    <!-- Toggle buttons -->
-                                    <div class="inline-flex rounded-lg border border-gray-200 p-0.5 bg-gray-50">
-                                        <button type="button"
-                                                (click)="variant.displayType = 'button'"
-                                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                                                [class.bg-white]="variant.displayType !== 'color'"
-                                                [class.text-gray-900]="variant.displayType !== 'color'"
-                                                [class.shadow-sm]="variant.displayType !== 'color'"
-                                                [class.text-gray-400]="variant.displayType === 'color'">
-                                            <span class="flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="3"/></svg>
-                                                Botón de texto
-                                            </span>
+                                <!-- Display Type Toggle -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Estilo</label>
+                                    <div class="inline-flex rounded-lg border border-gray-200 p-0.5 bg-white">
+                                        <button type="button" (click)="group.displayType = 'button'"
+                                                class="px-2 py-1 rounded text-xs font-semibold transition-all"
+                                                [class.bg-gray-900]="group.displayType !== 'color'"
+                                                [class.text-white]="group.displayType !== 'color'"
+                                                [class.text-gray-400]="group.displayType === 'color'">
+                                            Botón
                                         </button>
-                                        <button type="button"
-                                                (click)="variant.displayType = 'color'"
-                                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                                                [class.bg-white]="variant.displayType === 'color'"
-                                                [class.text-gray-900]="variant.displayType === 'color'"
-                                                [class.shadow-sm]="variant.displayType === 'color'"
-                                                [class.text-gray-400]="variant.displayType !== 'color'">
-                                            <span class="flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-                                                Círculo de color
-                                            </span>
+                                        <button type="button" (click)="group.displayType = 'color'"
+                                                class="px-2 py-1 rounded text-xs font-semibold transition-all"
+                                                [class.bg-gray-900]="group.displayType === 'color'"
+                                                [class.text-white]="group.displayType === 'color'"
+                                                [class.text-gray-400]="group.displayType !== 'color'">
+                                            Color
                                         </button>
                                     </div>
+                                </div>
+                                <!-- Delete Group -->
+                                <button type="button" (click)="removeVariantGroup(gi)"
+                                        class="p-1.5 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors self-end">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
 
-                                    <!-- Color picker (only when color mode) -->
-                                    @if (variant.displayType === 'color') {
-                                        <div class="flex items-center gap-2">
-                                            <label class="text-xs text-gray-500">Color:</label>
-                                            <div class="relative flex items-center">
-                                                <!-- Visual circle preview -->
-                                                <div class="w-8 h-8 rounded-full border-2 border-gray-200 shadow-inner cursor-pointer overflow-hidden"
-                                                     [style.background]="variant.color || '#000000'">
-                                                    <input type="color"
-                                                           [(ngModel)]="variant.color"
-                                                           [name]="'v_color_'+variantIndex"
-                                                           class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
-                                                </div>
-                                                <span class="ml-2 text-xs font-mono text-gray-500">{{ variant.color || '#000000' }}</span>
+                            <!-- Values List -->
+                            <div class="pl-4 border-l-2 border-gray-200 space-y-2">
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase">Valores</label>
+                                @for (val of group.values; track $index; let vi = $index) {
+                                    <div class="flex flex-col gap-3 bg-white rounded-lg p-3 border border-gray-200">
+                                        <!-- Top row: Value definition -->
+                                        <div class="flex items-start gap-2">
+                                            <!-- Move value up/down -->
+                                            <div class="flex flex-col gap-0.5 mt-1">
+                                                <button type="button" (click)="moveValueUp(gi, vi)" [disabled]="vi === 0"
+                                                        class="p-0.5 rounded text-gray-300 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                                                </button>
+                                                <button type="button" (click)="moveValueDown(gi, vi)" [disabled]="vi === group.values.length - 1"
+                                                        class="p-0.5 rounded text-gray-300 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+                                                </button>
                                             </div>
-                                        </div>
-                                    }
-                                </div>
-                                @if (variant.displayType === 'color') {
-                                    <p class="text-[10px] text-gray-400 mt-2">💡 El cliente verá un círculo de este color. El nombre (valor) aparece como tooltip al pasar el cursor.</p>
-                                } @else {
-                                    <p class="text-[10px] text-gray-400 mt-2">El cliente verá un botón con el texto del valor de la variante.</p>
-                                }
-                            </div>
-
-                            <!-- Image Selection for Variant -->
-                            @if (getAllProductImages().length > 0) {
-                                <div class="border-t border-gray-200 pt-4">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <label class="block text-xs font-bold text-gray-700">
-                                            Imágenes para esta variante
-                                            @if (variant.imageIndexes && variant.imageIndexes.length > 0) {
-                                                <span class="ml-2 text-terra">({{ variant.imageIndexes.length }} seleccionadas)</span>
-                                            } @else {
-                                                <span class="ml-2 text-gray-400">(todas)</span>
-                                            }
-                                        </label>
-                                        @if (variant.imageIndexes && variant.imageIndexes.length > 0) {
-                                            <button type="button" 
-                                                    (click)="clearVariantImages(variantIndex)"
-                                                    class="text-xs text-gray-500 hover:text-terra">
-                                                Limpiar selección
-                                            </button>
-                                        }
-                                    </div>
-                                    <div class="grid grid-cols-6 md:grid-cols-8 gap-2">
-                                        @for (img of getAllProductImages(); track imgIndex; let imgIndex = $index) {
-                                            <div class="relative group">
-                                                <label class="cursor-pointer block">
-                                                    <div class="aspect-square rounded-lg overflow-hidden border-2 transition-all"
-                                                         [class.border-terra]="isImageSelectedForVariant(variantIndex, imgIndex)"
-                                                         [class.border-gray-200]="!isImageSelectedForVariant(variantIndex, imgIndex)"
-                                                         [class.opacity-50]="!isImageSelectedForVariant(variantIndex, imgIndex)">
-                                                        <img [src]="img" class="w-full h-full object-cover">
+                                            <!-- Value name -->
+                                            <div class="flex-1">
+                                                <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Valor</label>
+                                                <input type="text" [(ngModel)]="val.value" [name]="'grp_'+gi+'_val_'+vi"
+                                                       placeholder="Ej: Rojo, S, Vainilla"
+                                                       class="w-full px-2 py-1.5 rounded border border-gray-300 text-sm font-semibold">
+                                            </div>
+                                            <!-- Color swatch (when color mode) -->
+                                            @if (group.displayType === 'color') {
+                                                <div class="flex flex-col">
+                                                    <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Color</label>
+                                                    <div class="relative flex items-center gap-1">
+                                                        <div class="w-8 h-8 rounded-full border-2 border-gray-200 shadow-inner cursor-pointer overflow-hidden"
+                                                             [style.background]="val.color || '#000000'">
+                                                            <input type="color"
+                                                                   [(ngModel)]="val.color"
+                                                                   [name]="'grp_'+gi+'_col_'+vi"
+                                                                   class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
+                                                        </div>
+                                                        <span class="text-[10px] font-mono text-gray-400">{{ val.color || '#000000' }}</span>
                                                     </div>
-                                                    <input type="checkbox"
-                                                           [checked]="isImageSelectedForVariant(variantIndex, imgIndex)"
-                                                           (change)="toggleImageForVariant(variantIndex, imgIndex)"
-                                                           class="absolute top-1 right-1 w-4 h-4 rounded border-2 border-white shadow-lg accent-terra">
-                                                </label>
+                                                </div>
+                                            }
+                                            <!-- Price -->
+                                            <div class="w-24">
+                                                <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Precio</label>
+                                                <div class="relative">
+                                                    <span class="absolute left-2 top-1.5 text-gray-400 text-xs">$</span>
+                                                    <input type="number" [(ngModel)]="val.price" [name]="'grp_'+gi+'_price_'+vi"
+                                                           placeholder="0" class="w-full pl-5 pr-2 py-1.5 rounded border border-gray-300 text-sm">
+                                                </div>
+                                            </div>
+                                            <!-- Stock -->
+                                            <div class="w-20">
+                                                <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Stock</label>
+                                                <input type="number" [(ngModel)]="val.stock" [name]="'grp_'+gi+'_stock_'+vi"
+                                                       class="w-full px-2 py-1.5 rounded border border-gray-300 text-sm">
+                                            </div>
+                                            <!-- Delete value -->
+                                            <button type="button" (click)="removeValueFromGroup(gi, vi)"
+                                                    class="text-gray-300 hover:text-red-500 transition-colors mt-5 flex-shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Sub-options for this specific value -->
+                                        <div class="border-t border-gray-100 pt-3 pl-8">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <h4 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                                                    Sub-opciones para "{{ val.value || 'este valor' }}"
+                                                </h4>
+                                                <button type="button" (click)="addOptionToValue(gi, vi)" class="text-[10px] text-blue-600 font-bold hover:underline">+ Nueva Sub-opción</button>
+                                            </div>
+                                            @if (val.options && val.options.length > 0) {
+                                                <div class="space-y-3">
+                                                    @for (option of val.options; track optIdx; let optIdx = $index) {
+                                                        <div class="bg-gray-50/50 rounded border border-gray-200 p-2.5">
+                                                            <div class="flex items-center gap-2 mb-2">
+                                                                <div class="flex flex-col gap-0.5">
+                                                                    <button type="button" (click)="moveOptionUpInValue(gi, vi, optIdx)" [disabled]="optIdx === 0"
+                                                                            class="p-0.5 rounded text-gray-400 hover:text-gray-700 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+                                                                    </button>
+                                                                    <button type="button" (click)="moveOptionDownInValue(gi, vi, optIdx)" [disabled]="optIdx === val.options!.length - 1"
+                                                                            class="p-0.5 rounded text-gray-400 hover:text-gray-700 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="flex-1">
+                                                                    <input type="text" [(ngModel)]="option.name" [name]="'grp_'+gi+'_val_'+vi+'_opt_'+optIdx+'_name'"
+                                                                           placeholder="Nombre (ej: Talla)"
+                                                                           class="w-full px-2 py-1 rounded border border-gray-300 text-xs font-semibold">
+                                                                </div>
+                                                                <button type="button" (click)="removeOptionFromValue(gi, vi, optIdx)" class="text-red-400 hover:text-red-600 p-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                                </button>
+                                                            </div>
+                                                            <div class="pl-5 border-l-2 border-gray-200 mt-2 space-y-1.5">
+                                                                @for (optVal of option.values; track optValIdx; let optValIdx = $index) {
+                                                                    <div class="flex items-center gap-2">
+                                                                        <input type="text" [(ngModel)]="optVal.name" [name]="'grp_'+gi+'_val_'+vi+'_opt_'+optIdx+'_vname_'+optValIdx"
+                                                                               placeholder="Valor (ej: S)" class="flex-1 px-2 py-1 rounded border border-gray-300 text-[11px]">
+                                                                        <div class="relative w-20">
+                                                                            <span class="absolute left-1.5 top-1 text-gray-400 text-[10px]">$</span>
+                                                                            <input type="number" [(ngModel)]="optVal.price" [name]="'grp_'+gi+'_val_'+vi+'_opt_'+optIdx+'_vprice_'+optValIdx"
+                                                                                   placeholder="0" class="w-full pl-4 pr-1.5 py-1 rounded border border-gray-300 text-[11px]" title="Precio">
+                                                                        </div>
+                                                                        <div class="w-16">
+                                                                            <input type="number" [(ngModel)]="optVal.stock" [name]="'grp_'+gi+'_val_'+vi+'_opt_'+optIdx+'_vstock_'+optValIdx"
+                                                                                   placeholder="Stk" class="w-full px-1.5 py-1 rounded border border-gray-300 text-[11px]" title="Stock de esta sub-opción">
+                                                                        </div>
+                                                                        <button type="button" (click)="removeValueFromOption2(gi, vi, optIdx, optValIdx)" class="text-gray-400 hover:text-red-500">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                }
+                                                                <button type="button" (click)="addValueToOption2(gi, vi, optIdx)" class="text-[10px] text-green-600 font-medium hover:underline mt-1">+ Valor</button>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            } @else {
+                                                <p class="text-[10px] text-gray-400 italic">Sin opciones adicionales para este valor.</p>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                @if (group.values.length === 0) {
+                                    <p class="text-xs text-gray-400 italic py-2">Sin valores. Agrega al menos uno.</p>
+                                }
+                                <button type="button" (click)="addValueToGroup(gi)"
+                                        class="text-xs text-green-600 font-bold hover:underline mt-1 flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Agregar Valor
+                                </button>
+                            </div>
+
+                            <!-- Image selection per value -->
+                            @if (getAllProductImages().length > 0 && group.values.length > 0) {
+                                <div class="border-t border-gray-200 pt-3">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Imágenes por Valor</label>
+                                    @for (val of group.values; track $index; let vi = $index) {
+                                        @if (val.value) {
+                                            <div class="mb-3">
+                                                <p class="text-xs font-semibold text-gray-600 mb-1">{{ val.value }}
+                                                    @if (val.imageIndexes && val.imageIndexes.length > 0) {
+                                                        <span class="ml-1 text-terra">({{ val.imageIndexes.length }} sel.)</span>
+                                                    }
+                                                </p>
+                                                <div class="grid grid-cols-6 md:grid-cols-10 gap-1.5">
+                                                    @for (img of getAllProductImages(); track imgIdx; let imgIdx = $index) {
+                                                        <label class="cursor-pointer block">
+                                                            <div class="aspect-square rounded overflow-hidden border-2 transition-all"
+                                                                 [class.border-terra]="isImgSelectedForValue(gi, vi, imgIdx)"
+                                                                 [class.border-gray-200]="!isImgSelectedForValue(gi, vi, imgIdx)"
+                                                                 [class.opacity-40]="!isImgSelectedForValue(gi, vi, imgIdx)">
+                                                                <img [src]="img" class="w-full h-full object-cover">
+                                                            </div>
+                                                            <input type="checkbox"
+                                                                   [checked]="isImgSelectedForValue(gi, vi, imgIdx)"
+                                                                   (change)="toggleImgForValue(gi, vi, imgIdx)"
+                                                                   class="hidden">
+                                                        </label>
+                                                    }
+                                                </div>
                                             </div>
                                         }
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-2 italic">
-                                        💡 Si no seleccionas ninguna imagen, se mostrarán todas las del producto
-                                    </p>
+                                    }
                                 </div>
                             }
 
-                            <!-- Nested Options (Sub-variants) -->
-                            <div class="border-t border-gray-200 pt-4 mt-4">
-                                <div class="flex justify-between items-center mb-3">
-                                    <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Opciones de Variante</h4>
-                                    <button type="button" (click)="addOptionToVariant(variantIndex)" class="text-xs text-blue-600 font-bold hover:underline">+ Nueva Opción</button>
-                                </div>
 
-                                @if (variant.options && variant.options.length > 0) {
-                                    <div class="space-y-4">
-                                        @for (option of variant.options; track optIndex; let optIndex = $index) {
-                                            <div class="bg-white rounded border border-gray-200 p-3">
-                                                <!-- Option Header with reorder -->
-                                                <div class="flex items-center gap-2 mb-3">
-                                                    <div class="flex-1">
-                                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nombre de la Opción</label>
-                                                        <input type="text" 
-                                                               [(ngModel)]="option.name" 
-                                                               [name]="'v_'+variantIndex+'_opt_'+optIndex+'_name'" 
-                                                               placeholder="Ej: Tipo de Masa" 
-                                                               class="w-full px-2 py-1.5 rounded border border-gray-300 text-sm">
-                                                    </div>
-                                                    <!-- Option reorder buttons -->
-                                                    <div class="flex flex-col gap-0.5 self-end mb-0.5">
-                                                        <button type="button" (click)="moveOptionUp(variantIndex, optIndex)" [disabled]="optIndex === 0"
-                                                                class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                                                title="Mover arriba">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-                                                        </button>
-                                                        <button type="button" (click)="moveOptionDown(variantIndex, optIndex)" [disabled]="optIndex === variant.options!.length - 1"
-                                                                class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                                                title="Mover abajo">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                                        </button>
-                                                    </div>
-                                                    <button type="button" (click)="removeOptionFromVariant(variantIndex, optIndex)" class="text-red-400 hover:text-red-600 p-1 self-end mb-0.5">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                                    </button>
-                                                </div>
-
-                                                <!-- Option Values -->
-                                                <div class="pl-4 border-l-2 border-gray-100 space-y-2">
-                                                    <label class="block text-[10px] font-bold text-gray-400 uppercase">Valores Seleccionables</label>
-                                                    @for (val of option.values; track valIndex; let valIndex = $index) {
-                                                        <div class="flex items-center gap-2">
-                                                            <input type="text" 
-                                                                   [(ngModel)]="val.name" 
-                                                                   [name]="'v_'+variantIndex+'_opt_'+optIndex+'_val_'+valIndex+'_name'"
-                                                                   placeholder="Valor (ej: Gruesa)" 
-                                                                   class="flex-1 px-2 py-1 rounded border border-gray-300 text-sm">
-                                                                    <div class="flex flex-col flex-1 pl-2">
-                                                                        <div class="relative">
-                                                                            <span class="absolute left-2 top-1.5 text-gray-400 text-xs">$</span>
-                                                                            <input type="number" 
-                                                                                [(ngModel)]="val.price" 
-                                                                                [name]="'v_'+variantIndex+'_opt_'+optIndex+'_val_'+valIndex+'_price'"
-                                                                                placeholder="0" 
-                                                                                class="w-full pl-5 pr-2 py-1 rounded border border-gray-300 text-sm">
-                                                                        </div>
-                                                                        <p class="text-[9px] text-gray-400 mt-0.5 leading-tight">Reemplaza otros precios. 0/Vacío = Heredado.</p>
-                                                                    </div>
-                                                                    <button type="button" (click)="removeValueFromOption(variantIndex, optIndex, valIndex)" class="text-gray-400 hover:text-red-500 self-start mt-1.5">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                                                    </button>
-                                                        </div>
-                                                    }
-                                                    <button type="button" (click)="addValueToOption(variantIndex, optIndex)" class="text-xs text-green-600 font-medium hover:underline mt-1">+ Agregar Valor</button>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                } @else {
-                                    <p class="text-xs text-gray-400 italic">No hay opciones adicionales configuradas.</p>
-                                }
-                            </div>
                         </div>
                     }
-                    @if (variants.length === 0) {
+                    @if (variantGroups.length === 0) {
                         <p class="text-sm text-gray-500 italic text-center py-4">Sin variantes. El producto usará el precio y stock base.</p>
                     }
                 </div>
             </div>
+
+
             <!-- Delete Zone -->
-             @if (isEditing) {
+            @if (isEditing) {
                 <div class="pt-8 border-t border-gray-200">
                     <div class="bg-red-50 border border-red-100 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div>
@@ -542,8 +551,8 @@ export class ProductFormComponent implements OnInit {
     uploading = false;
     uploadProgress = 0;
 
-    // variants
-    variants: VariantDraft[] = [];
+    // variant groups
+    variantGroups: VariantGroupDraft[] = [];
 
     // deps
     categories: Category[] = [];
@@ -623,13 +632,35 @@ export class ProductFormComponent implements OnInit {
 
                 console.log('ProductFormComponent: Images loaded -', this.productImages);
 
-                if (product.variants) {
-                    this.variants = product.variants.map(v => ({
-                        ...v,
-                        price: v.price != null ? Number(v.price) : 0,
-                        stock: v.stock != null ? Number(v.stock) : 0,
-                        imageIndexes: v.imageIndexes ? v.imageIndexes.map(i => Number(i)) : []
-                    }));
+                if (product.variants && product.variants.length > 0) {
+                    // Group flat variants by name
+                    const grouped: VariantGroupDraft[] = [];
+                    for (const v of product.variants) {
+                        let group = grouped.find(g => g.name === v.name);
+                        if (!group) {
+                            group = {
+                                name: v.name,
+                                displayType: (v.displayType as 'button' | 'color') || 'button',
+                                values: []
+                            };
+                            grouped.push(group);
+                        }
+                        if (!group) return;
+                        group.values.push({
+                            value: v.value,
+                            price: v.price != null ? Number(v.price) : 0,
+                            stock: v.stock != null ? Number(v.stock) : 0,
+                            imageIndexes: v.imageIndexes ? v.imageIndexes.map((i: any) => Number(i)) : [],
+                            color: v.color,
+                            options: v.options ? v.options.map((o: any) => ({
+                                ...o,
+                                values: o.values ? o.values.map((ov: any) => ({ ...ov, stock: ov.stock != null ? Number(ov.stock) : 0 })) : []
+                            })) : []
+                        });
+                    }
+                    this.variantGroups = grouped;
+                } else {
+                    this.variantGroups = [];
                 }
 
                 // Urgency / Stock settings
@@ -660,99 +691,92 @@ export class ProductFormComponent implements OnInit {
         }
     }
 
-    addVariant() {
-        this.variants.push({ name: 'Talla', value: '', price: 0, stock: 0, order: this.variants.length, displayType: 'button', color: '#000000' });
+    // ─── Variant Group CRUD ───────────────────────────────────────────────
+    addVariantGroup() {
+        this.variantGroups.push({ name: '', displayType: 'button', values: [{ value: '', price: 0, stock: 0, options: [] }] });
     }
 
-    removeVariant(index: number) {
-        this.variants.splice(index, 1);
+    removeVariantGroup(gi: number) {
+        this.variantGroups.splice(gi, 1);
     }
 
-    moveVariantUp(index: number) {
-        if (index === 0) return;
-        [this.variants[index - 1], this.variants[index]] = [this.variants[index], this.variants[index - 1]];
+    moveGroupUp(gi: number) {
+        if (gi === 0) return;
+        [this.variantGroups[gi - 1], this.variantGroups[gi]] = [this.variantGroups[gi], this.variantGroups[gi - 1]];
     }
 
-    moveVariantDown(index: number) {
-        if (index === this.variants.length - 1) return;
-        [this.variants[index + 1], this.variants[index]] = [this.variants[index], this.variants[index + 1]];
+    moveGroupDown(gi: number) {
+        if (gi === this.variantGroups.length - 1) return;
+        [this.variantGroups[gi + 1], this.variantGroups[gi]] = [this.variantGroups[gi], this.variantGroups[gi + 1]];
     }
 
-    moveOptionUp(variantIndex: number, optionIndex: number) {
-        const options = this.variants[variantIndex].options!;
-        if (optionIndex === 0) return;
-        [options[optionIndex - 1], options[optionIndex]] = [options[optionIndex], options[optionIndex - 1]];
+    // ─── Value CRUD ──────────────────────────────────────────────────────────
+    addValueToGroup(gi: number) {
+        this.variantGroups[gi].values.push({ value: '', price: 0, stock: 0 });
     }
 
-    moveOptionDown(variantIndex: number, optionIndex: number) {
-        const options = this.variants[variantIndex].options!;
-        if (optionIndex === options.length - 1) return;
-        [options[optionIndex + 1], options[optionIndex]] = [options[optionIndex], options[optionIndex + 1]];
+    removeValueFromGroup(gi: number, vi: number) {
+        this.variantGroups[gi].values.splice(vi, 1);
     }
 
-    // Image selection for variants
+    moveValueUp(gi: number, vi: number) {
+        const vals = this.variantGroups[gi].values;
+        if (vi === 0) return;
+        [vals[vi - 1], vals[vi]] = [vals[vi], vals[vi - 1]];
+    }
+
+    moveValueDown(gi: number, vi: number) {
+        const vals = this.variantGroups[gi].values;
+        if (vi === vals.length - 1) return;
+        [vals[vi + 1], vals[vi]] = [vals[vi], vals[vi + 1]];
+    }
+
+    // ─── Image selection per value ────────────────────────────────────────────
     getAllProductImages(): string[] {
         return [...this.productImages, ...this.imagePreviews];
     }
 
-    isImageSelectedForVariant(variantIndex: number, imageIndex: number): boolean {
-        const variant = this.variants[variantIndex];
-        if (!variant.imageIndexes || variant.imageIndexes.length === 0) {
-            return false;
-        }
-        return variant.imageIndexes.includes(imageIndex);
+    isImgSelectedForValue(gi: number, vi: number, imgIdx: number): boolean {
+        return this.variantGroups[gi].values[vi].imageIndexes?.includes(imgIdx) ?? false;
     }
 
-    toggleImageForVariant(variantIndex: number, imageIndex: number): void {
-        const variant = this.variants[variantIndex];
-
-        if (!variant.imageIndexes) {
-            variant.imageIndexes = [];
-        }
-
-        const index = variant.imageIndexes.indexOf(imageIndex);
-        if (index > -1) {
-            // Remove if already selected
-            variant.imageIndexes.splice(index, 1);
-        } else {
-            // Add if not selected
-            variant.imageIndexes.push(imageIndex);
-        }
-
-        // Sort to keep indexes in order
-        variant.imageIndexes.sort((a, b) => a - b);
+    toggleImgForValue(gi: number, vi: number, imgIdx: number) {
+        const val = this.variantGroups[gi].values[vi];
+        if (!val.imageIndexes) val.imageIndexes = [];
+        const pos = val.imageIndexes.indexOf(imgIdx);
+        if (pos > -1) { val.imageIndexes.splice(pos, 1); } else { val.imageIndexes.push(imgIdx); val.imageIndexes.sort((a, b) => a - b); }
     }
 
-    clearVariantImages(variantIndex: number): void {
-        const variant = this.variants[variantIndex];
-        variant.imageIndexes = [];
+    // ─── Sub-options per VALUE (e.g. Tallas por color) ──────────────────────────
+    addOptionToValue(gi: number, vi: number) {
+        if (!this.variantGroups[gi].values[vi].options) this.variantGroups[gi].values[vi].options = [];
+        this.variantGroups[gi].values[vi].options!.push({ name: '', values: [{ name: '', price: 0, stock: 0 }] });
     }
 
-    // Sub-variants (Options)
-    addOptionToVariant(variantIndex: number) {
-        if (!this.variants[variantIndex].options) {
-            this.variants[variantIndex].options = [];
-        }
-        this.variants[variantIndex].options!.push({
-            name: '',
-            values: [{ name: '', price: 0 }]
-        });
+    removeOptionFromValue(gi: number, vi: number, optIdx: number) {
+        this.variantGroups[gi].values[vi].options!.splice(optIdx, 1);
     }
 
-    removeOptionFromVariant(variantIndex: number, optionIndex: number) {
-        this.variants[variantIndex].options!.splice(optionIndex, 1);
+    moveOptionUpInValue(gi: number, vi: number, optIdx: number) {
+        const opts = this.variantGroups[gi].values[vi].options!;
+        if (optIdx === 0) return;
+        [opts[optIdx - 1], opts[optIdx]] = [opts[optIdx], opts[optIdx - 1]];
     }
 
-    addValueToOption(variantIndex: number, optionIndex: number) {
-        this.variants[variantIndex].options![optionIndex].values.push({
-            name: '',
-            price: 0
-        });
+    moveOptionDownInValue(gi: number, vi: number, optIdx: number) {
+        const opts = this.variantGroups[gi].values[vi].options!;
+        if (optIdx === opts.length - 1) return;
+        [opts[optIdx + 1], opts[optIdx]] = [opts[optIdx], opts[optIdx + 1]];
     }
 
-    removeValueFromOption(variantIndex: number, optionIndex: number, valueIndex: number) {
-        this.variants[variantIndex].options![optionIndex].values.splice(valueIndex, 1);
+    addValueToOption2(gi: number, vi: number, optIdx: number) {
+        this.variantGroups[gi].values[vi].options![optIdx].values.push({ name: '', price: 0, stock: 0 });
     }
+
+    removeValueFromOption2(gi: number, vi: number, optIdx: number, valIdx: number) {
+        this.variantGroups[gi].values[vi].options![optIdx].values.splice(valIdx, 1);
+    }
+
 
     onSubmit() {
         if (!isPlatformBrowser(this.platformId)) return;
@@ -784,23 +808,25 @@ export class ProductFormComponent implements OnInit {
                 formData.append('image', this.selectedFile);
             }
 
-            // Always send variants, even if empty, to allow deletion of all variants
-            // Assign order by current array position so the sort is persisted
-            const variantsToSend = this.variants.map((v, vi) => ({
-                ...v,
-                order: vi,
-                price: v.price || 0, // Ensure empty/null becomes 0
-                options: v.options?.map((o, oi) => ({
-                    ...o,
-                    order: oi,
-                    values: o.values.map((val, vali) => ({
-                        ...val,
-                        order: vali,
-                        price: val.price || 0 // Ensure empty/null becomes 0
-                    }))
-                })),
-                imageIndexes: v.imageIndexes || []
-            }));
+            // Flatten variantGroups → flat variant array for backend
+            const variantsToSend = this.variantGroups.flatMap((group, gi) =>
+                group.values.map((val, vi) => ({
+                    name: group.name,
+                    value: val.value,
+                    price: val.price || 0,
+                    stock: val.stock || 0,
+                    order: gi * 1000 + vi,
+                    displayType: group.displayType || 'button',
+                    color: val.color || null,
+                    imageIndexes: val.imageIndexes || [],
+                    // options are per-value: allows each color to have different available sizes
+                    options: val.options?.map((o, oi) => ({
+                        ...o,
+                        order: oi,
+                        values: o.values.map((v, vali) => ({ ...v, order: vali, price: v.price || 0, stock: v.stock || 0 }))
+                    })) || []
+                }))
+            );
             formData.append('variants', JSON.stringify(variantsToSend));
 
             if (this.isEditing && this.productId) {
