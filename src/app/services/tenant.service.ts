@@ -26,6 +26,7 @@ export interface Tenant {
     coverUrl?: string;
     currency?: string;
     headerLayout?: 'compact' | 'overlay' | 'minimal';
+    productCardStyle?: 'classic' | 'bold' | 'elegant';
     whatsapp?: string; // WhatsApp specific number
     phone?: string;    // Fallback phone
     openingHours?: { day: string; open: string; close: string; isOpen: boolean }[];

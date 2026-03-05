@@ -185,6 +185,67 @@ const PAYMENT_PROVIDERS = [
                             </div>
                         </label>
                     </div>
+
+                 <!-- Product Card Style -->
+                 <div class="space-y-2 md:col-span-2 border-t pt-6 mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estilo de Tarjetas de Productos</label>
+                    <p class="text-xs text-gray-400 mb-3">Elige cómo se verán los productos en la página principal de tu tienda.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Classic -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" formControlName="productCardStyle" value="classic" class="peer sr-only">
+                            <div class="p-4 border rounded-xl hover:border-terra peer-checked:border-terra peer-checked:bg-terra/5 transition-all">
+                                <!-- Preview -->
+                                <div class="mb-3 rounded-lg overflow-hidden bg-gray-100 aspect-[3/2] relative">
+                                    <div class="absolute inset-0 flex flex-col">
+                                        <div class="flex-1 bg-gray-200"></div>
+                                        <div class="bg-white p-2">
+                                            <div class="h-2 bg-gray-300 rounded w-3/4 mb-1"></div>
+                                            <div class="h-3 bg-gray-800 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="block font-bold text-gray-900 text-sm mb-1">Classic</span>
+                                <span class="text-xs text-gray-500">Imagen + info debajo. Orden y claridad.</span>
+                            </div>
+                        </label>
+                        <!-- Bold -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" formControlName="productCardStyle" value="bold" class="peer sr-only">
+                            <div class="p-4 border rounded-xl hover:border-terra peer-checked:border-terra peer-checked:bg-terra/5 transition-all">
+                                <!-- Preview -->
+                                <div class="mb-3 rounded-lg overflow-hidden bg-gray-200 aspect-[3/2] relative">
+                                    <div class="absolute inset-0 bg-gray-300"></div>
+                                    <div class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+                                        <div class="h-2 bg-white/80 rounded w-3/4 mb-1"></div>
+                                        <div class="h-2 bg-white/60 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                                <span class="block font-bold text-gray-900 text-sm mb-1">Bold</span>
+                                <span class="text-xs text-gray-500">Imagen a sangre. Máximo impacto visual.</span>
+                            </div>
+                        </label>
+                        <!-- Elegant -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" formControlName="productCardStyle" value="elegant" class="peer sr-only">
+                            <div class="p-4 border rounded-xl hover:border-terra peer-checked:border-terra peer-checked:bg-terra/5 transition-all">
+                                <!-- Preview -->
+                                <div class="mb-3 rounded-lg overflow-hidden border border-gray-300 aspect-[3/2] relative">
+                                    <div class="absolute inset-0 flex">
+                                        <div class="w-2/5 bg-gray-200"></div>
+                                        <div class="flex-1 p-2 bg-white flex flex-col justify-center">
+                                            <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                                            <div class="h-2 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                            <div class="h-2.5 bg-terra/40 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="block font-bold text-gray-900 text-sm mb-1">Elegant</span>
+                                <span class="text-xs text-gray-500">Layout horizontal. Boutique premium.</span>
+                            </div>
+                        </label>
+                    </div>
+                 </div>
                  </div>
 
                  <!-- Theme Colors -->
@@ -749,6 +810,7 @@ export class TenantSettingsComponent implements OnInit {
       socialWhatsappEnabled: [false],
       currency: ['PEN'],
       headerLayout: ['compact'],
+      productCardStyle: ['classic'],
       announcementEnabled: [false],
       announcementText: [''],
       announcementBgColor: ['#000000'],
@@ -864,6 +926,7 @@ export class TenantSettingsComponent implements OnInit {
       socialWhatsappEnabled: !!tenant.socialWhatsapp,
       currency: tenant.currency || 'PEN',
       headerLayout: tenant.headerLayout || 'compact',
+      productCardStyle: tenant.productCardStyle || 'classic',
       announcementEnabled: tenant.announcementEnabled || false,
       announcementText: tenant.announcementText || '',
       announcementBgColor: tenant.announcementBgColor || '#000000',
@@ -1059,6 +1122,7 @@ export class TenantSettingsComponent implements OnInit {
 
     formData.append('currency', formValue.currency);
     formData.append('headerLayout', formValue.headerLayout);
+    formData.append('productCardStyle', formValue.productCardStyle || 'classic');
 
     // Announcement
     formData.append('announcementEnabled', String(formValue.announcementEnabled));

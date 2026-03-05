@@ -163,78 +163,153 @@ import { FooterComponent } from '../components/footer/footer.component';
             </div>
         }
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-          @for (product of products; track product.id) {
-            <div class="group relative flex flex-col h-full bg-white rounded-md cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-black/5 hover:-translate-y-1">
-              <!-- Card Image -->
-              <div class="aspect-[3/4] bg-gray-100 overflow-hidden relative rounded-md mx-2 mt-2">
-                 <img [src]="product.images?.[0] || product.imageUrl || 'https://placehold.co/400x500/f4e1d2/b24343?text=NO+IMAGE'" 
-                     [alt]="product.title"
-                     class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110">
-                 
-                 <!-- Badges: Top Left (Variety) -->
-                 <div class="absolute top-3 left-3 flex flex-col gap-2 z-10">
+        @switch (tenant?.productCardStyle || 'classic') {
+          @case ('bold') {
+            <!-- BOLD STYLE: Full-bleed, image-first, glassmorphism overlay -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              @for (product of products; track product.id) {
+                <div class="group relative rounded-xl overflow-hidden cursor-pointer aspect-[2/3] shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+                  <!-- Full-bleed image -->
+                  <img [src]="product.images?.[0] || product.imageUrl || 'https://placehold.co/400x600/1a1a1a/ffffff?text=SIN+FOTO'"
+                       [alt]="product.title"
+                       class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                  <!-- Gradient overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/20"></div>
+                  <!-- Top badges -->
+                  <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                     @if (product.variants && product.variants.length > 0) {
-                        <span class="bg-black/30 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase">
-                            Variedad
-                        </span>
+                      <span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20 uppercase tracking-wider">Variedad</span>
                     }
-                 </div>
-
-                 <!-- Badges: Bottom Left (Urgency - Moved to avoid covering faces) -->
-                 <div class="absolute bottom-3 left-3 flex flex-col gap-2 z-10">
-                     @if (product.stock < 5 && product.stock > 0 && !product.ignoreStock) {
-                          <span class="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase animate-pulse shadow-sm">
-                             ¡Últimos!
-                         </span>
-                     }
-                     @if (product.urgencyOverride || (tenant?.lowStockThreshold && product.stock <= (tenant?.lowStockThreshold || 0) && product.stock > 0 && !product.ignoreStock)) {
-                        <span class="bg-orange-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase flex items-center gap-1 shadow-sm animate-pulse">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                            ¡Se Agota!
-                        </span>
-                     }
-                 </div>
-                 
-                 <!-- Desktop Quick Actions Overlay -->
-                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex items-center justify-center gap-3 backdrop-blur-[2px] z-10 pointer-events-none">
-                    <button (click)="addToCart(product); $event.stopPropagation()" 
-                            class="h-12 w-12 bg-white rounded-full flex items-center justify-center text-gray-900 hover:bg-terra hover:text-white transition-all transform scale-0 group-hover:scale-100 duration-300 delay-75 shadow-lg pointer-events-auto">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    </button>
-                    <a [routerLink]="['p', product.id]" 
-                       class="h-12 w-12 bg-white rounded-full flex items-center justify-center text-gray-900 hover:bg-terra hover:text-white transition-all transform scale-0 group-hover:scale-100 duration-300 delay-100 shadow-lg pointer-events-auto">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </a>
-                 </div>
-              </div>
-
-              <!-- Mobile Quick Add -->
-              <button (click)="addToCart(product); $event.stopPropagation()" 
-                     class="md:hidden absolute top-4 right-4 h-9 w-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-800 shadow-sm border border-gray-100 active:bg-terra active:text-white z-10">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </button>
-
-              <!-- Info -->
-              <div class="p-5 flex flex-col flex-1">
-                <div class="flex-1">
-                    <h3 class="font-bold text-gray-900 text-sm md:text-[15px] leading-tight uppercase tracking-wider line-clamp-2 md:group-hover:text-terra transition-colors">{{ product.title }}</h3>
-                    <p class="text-gray-500 text-xs mt-2 line-clamp-2 leading-relaxed font-light">{{ product.description }}</p>
-                </div>
-                
-                <div class="flex items-end justify-between mt-4 border-t border-gray-50 pt-3">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-0.5">Precio</span>
-                        <p class="font-bold text-gray-900 text-lg md:text-xl">{{ product.price | currency : getSymbol(tenant?.currency) }}</p>
+                    @if (product.stock < 5 && product.stock > 0 && !product.ignoreStock) {
+                      <span class="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase animate-pulse">¡Últimos!</span>
+                    }
+                    @if (product.urgencyOverride || (tenant?.lowStockThreshold && product.stock <= (tenant?.lowStockThreshold || 0) && product.stock > 0 && !product.ignoreStock)) {
+                      <span class="bg-orange-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase animate-pulse">¡Se Agota!</span>
+                    }
+                  </div>
+                  <!-- Mobile quick add -->
+                  <button (click)="addToCart(product); $event.stopPropagation()"
+                          class="md:hidden absolute top-3 right-3 h-9 w-9 bg-white/20 backdrop-blur border border-white/30 rounded-full flex items-center justify-center text-white active:bg-white active:text-gray-900 z-10 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <!-- Bottom info overlay -->
+                  <div class="absolute bottom-0 inset-x-0 p-4 z-10">
+                    <h3 class="font-medium text-white text-sm leading-snug tracking-wide line-clamp-2 mb-1">{{ product.title }}</h3>
+                    <p class="text-white/70 text-xs line-clamp-1 mb-2">{{ product.description }}</p>
+                    <div class="flex items-center justify-between">
+                      <p class="font-semibold text-white text-base">{{ product.price | currency : getSymbol(tenant?.currency) }}</p>
+                      <button (click)="addToCart(product); $event.stopPropagation()"
+                              class="hidden md:flex h-9 w-9 bg-white rounded-full items-center justify-center text-gray-900 hover:bg-terra hover:text-white transition-colors shadow-lg opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
                     </div>
+                  </div>
+                  <!-- Full click area -->
+                  <a [routerLink]="['p', product.id]" class="absolute inset-0 z-0"></a>
                 </div>
-              </div>
-
-              <!-- Full Click Area -->
-              <a [routerLink]="['p', product.id]" class="absolute inset-0 z-0"></a>
+              }
             </div>
           }
-        </div>
+
+          @case ('elegant') {
+            <!-- ELEGANT STYLE: Horizontal card, boutique premium -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              @for (product of products; track product.id) {
+                <div class="group relative flex bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 hover:shadow-lg transition-all duration-300">
+                  <!-- Left: Portrait image with object-contain so vertical photos show fully -->
+                  <div class="w-36 sm:w-40 shrink-0 relative aspect-[3/4] bg-gray-50 overflow-hidden">
+                    <img [src]="product.images?.[0] || product.imageUrl || 'https://placehold.co/300x400/f5f5f5/999999?text=Photo'"
+                         [alt]="product.title"
+                         class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
+                    <!-- Badges -->
+                    @if (product.variants && product.variants.length > 0) {
+                      <span class="absolute top-2 left-2 bg-gray-900/70 text-white text-[9px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider">+Var.</span>
+                    }
+                    @if (product.stock < 5 && product.stock > 0 && !product.ignoreStock) {
+                      <span class="absolute bottom-2 left-2 bg-red-500 text-white text-[9px] font-medium px-2 py-0.5 rounded-full uppercase animate-pulse">¡Últimos!</span>
+                    }
+                  </div>
+                  <!-- Right: Info -->
+                  <div class="flex flex-col flex-1 px-4 py-4 justify-between min-w-0">
+                    <div>
+                      <h3 class="font-semibold text-gray-900 text-[13px] leading-snug tracking-wide line-clamp-2">{{ product.title }}</h3>
+                      <p class="text-gray-400 text-xs mt-1.5 line-clamp-3 leading-relaxed">{{ product.description }}</p>
+                    </div>
+                    <div class="flex items-center justify-between mt-3">
+                      <p class="font-medium text-gray-800 text-sm">{{ product.price | currency : getSymbol(tenant?.currency) }}</p>
+                      <button (click)="addToCart(product); $event.stopPropagation()"
+                              class="h-8 w-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-terra hover:text-white hover:border-terra active:bg-terra active:text-white transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Full click area -->
+                  <a [routerLink]="['p', product.id]" class="absolute inset-0 z-0"></a>
+                </div>
+              }
+            </div>
+          }
+
+          @default {
+            <!-- CLASSIC STYLE: Improved original -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-8">
+              @for (product of products; track product.id) {
+                <div class="group relative flex flex-col h-full bg-white rounded-2xl cursor-pointer transition-all duration-500 hover:shadow-xl hover:shadow-black/8 hover:-translate-y-1 border border-gray-50 hover:border-gray-100">
+                  <!-- Card Image -->
+                  <div class="aspect-[3/4] bg-gray-50 overflow-hidden relative rounded-t-2xl">
+                    <img [src]="product.images?.[0] || product.imageUrl || 'https://placehold.co/400x500/f4e1d2/b24343?text=SIN+FOTO'"
+                         [alt]="product.title"
+                         class="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110">
+                    <!-- Badges: Top Left -->
+                    <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                      @if (product.variants && product.variants.length > 0) {
+                        <span class="bg-black/30 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider border border-white/10 uppercase">Variedad</span>
+                      }
+                    </div>
+                    <!-- Badges: Bottom Left -->
+                    <div class="absolute bottom-3 left-3 flex flex-col gap-1.5 z-10">
+                      @if (product.stock < 5 && product.stock > 0 && !product.ignoreStock) {
+                        <span class="bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase animate-pulse shadow-sm">¡Últimos!</span>
+                      }
+                      @if (product.urgencyOverride || (tenant?.lowStockThreshold && product.stock <= (tenant?.lowStockThreshold || 0) && product.stock > 0 && !product.ignoreStock)) {
+                        <span class="bg-orange-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase flex items-center gap-1 shadow-sm animate-pulse">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                          ¡Se Agota!
+                        </span>
+                      }
+                    </div>
+                    <!-- Desktop hover actions -->
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex items-center justify-center gap-3 backdrop-blur-[2px] z-10 pointer-events-none">
+                      <button (click)="addToCart(product); $event.stopPropagation()"
+                              class="h-12 w-12 bg-white rounded-full flex items-center justify-center text-gray-900 hover:bg-terra hover:text-white transition-all transform scale-0 group-hover:scale-100 duration-300 delay-75 shadow-lg pointer-events-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </button>
+                      <a [routerLink]="['p', product.id]"
+                         class="h-12 w-12 bg-white rounded-full flex items-center justify-center text-gray-900 hover:bg-terra hover:text-white transition-all transform scale-0 group-hover:scale-100 duration-300 delay-100 shadow-lg pointer-events-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      </a>
+                    </div>
+                  </div>
+                  <!-- Mobile quick add -->
+                  <button (click)="addToCart(product); $event.stopPropagation()"
+                          class="md:hidden absolute top-3 right-3 h-9 w-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-800 shadow-sm border border-gray-100 active:bg-terra active:text-white z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <!-- Info -->
+                  <div class="px-3 pt-3 pb-4 flex flex-col flex-1">
+                    <!-- Title + Price on same row -->
+                    <div class="flex items-start gap-2">
+                      <h3 class="flex-1 font-semibold text-gray-900 text-[13px] md:text-sm leading-snug tracking-wide line-clamp-2 md:group-hover:text-terra transition-colors duration-200">{{ product.title }}</h3>
+                      <span class="shrink-0 font-medium text-gray-700 text-sm mt-0.5">{{ product.price | currency : getSymbol(tenant?.currency) }}</span>
+                    </div>
+                  </div>
+                  <!-- Full click area -->
+                  <a [routerLink]="['p', product.id]" class="absolute inset-0 z-0"></a>
+                </div>
+              }
+            </div>
+          }
+        }
       </main>
 
       <app-cart-summary [tenant]="tenant"></app-cart-summary>
