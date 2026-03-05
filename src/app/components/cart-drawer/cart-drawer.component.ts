@@ -150,44 +150,56 @@ import { environment } from '../../../environments/environment';
                          <h3 class="text-sm font-bold uppercase text-gray-900 tracking-wider mb-4">Datos de Envío</h3>
                          
                          <!-- Delivery Method Switch -->
-                         <div class="bg-gray-100 p-1 rounded-lg flex mb-4">
+                         <div class="bg-gray-100/80 p-1.5 rounded-xl flex mb-6 shadow-inner ring-1 ring-black/5">
                              <button (click)="deliveryMethod = 'PICKUP'"
                                      [class.bg-white]="deliveryMethod === 'PICKUP'"
                                      [class.shadow-sm]="deliveryMethod === 'PICKUP'"
+                                     [class.ring-1]="deliveryMethod === 'PICKUP'"
+                                     [class.ring-gray-200]="deliveryMethod === 'PICKUP'"
                                      [class.text-gray-900]="deliveryMethod === 'PICKUP'"
-                                     class="flex-1 py-1.5 text-xs font-bold rounded text-gray-500 transition-all flex items-center justify-center gap-1">
-                                 <span>🏪</span> Recojo en Tienda
+                                     [class.text-gray-500]="deliveryMethod !== 'PICKUP'"
+                                     [class.hover:bg-gray-200/50]="deliveryMethod !== 'PICKUP'"
+                                     class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.text-terra]="deliveryMethod === 'PICKUP'"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                 Recojo en Tienda
                              </button>
                              <button (click)="deliveryMethod = 'DELIVERY'"
                                      [class.bg-white]="deliveryMethod === 'DELIVERY'"
                                      [class.shadow-sm]="deliveryMethod === 'DELIVERY'"
+                                     [class.ring-1]="deliveryMethod === 'DELIVERY'"
+                                     [class.ring-gray-200]="deliveryMethod === 'DELIVERY'"
                                      [class.text-gray-900]="deliveryMethod === 'DELIVERY'"
-                                     class="flex-1 py-1.5 text-xs font-bold rounded text-gray-500 transition-all flex items-center justify-center gap-1">
-                                 <span>🛵</span> Delivery
+                                     [class.text-gray-500]="deliveryMethod !== 'DELIVERY'"
+                                     [class.hover:bg-gray-200/50]="deliveryMethod !== 'DELIVERY'"
+                                     class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.text-terra]="deliveryMethod === 'DELIVERY'"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                                 Delivery
                              </button>
                          </div>
 
                          <!-- Store Info for Pickup -->
                          @if (deliveryMethod === 'PICKUP' && tenantService.tenant()) {
-                             <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4 text-sm text-blue-800 animate-fade-in">
-                                 <div class="font-bold flex items-center gap-1 mb-1">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                             <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 md:p-5 mb-6 text-sm text-blue-800 animate-fade-in shadow-sm">
+                                 <div class="font-bold flex items-center gap-2 mb-2 text-blue-900 text-base">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-600"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                                      Ubicación de Tienda
                                  </div>
-                                 <p class="mb-2">{{ tenantService.tenant()?.address || 'Dirección no configurada' }}</p>
+                                 <p class="mb-3 pl-6 text-blue-800/80 leading-relaxed">{{ tenantService.tenant()?.address || 'Dirección no configurada' }}</p>
                                  
-                                 @if (tenantService.tenant()?.openingHours) {
-                                     <div class="flex items-start gap-1 text-xs text-blue-600 mb-2">
-                                         <svg class="mt-0.5" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                         <span>{{ tenantService.tenant()?.openingHours }}</span>
+                                 @if (getOpeningHoursText()) {
+                                     <div class="flex items-start gap-2 text-sm text-blue-700 mb-4 pl-6 font-medium">
+                                         <svg class="mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                         <span class="leading-snug">{{ getOpeningHoursText() }}</span>
                                      </div>
                                  }
 
-                                 <a [href]="getGoogleMapsUrl()" target="_blank" 
-                                    class="inline-flex items-center gap-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors shadow-sm">
-                                    Ver en Google Maps
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                 </a>
+                                 <div class="pl-6">
+                                     <a [href]="getGoogleMapsUrl()" target="_blank" 
+                                        class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95">
+                                        Ver en Google Maps
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                     </a>
+                                 </div>
                              </div>
                          }
 
@@ -578,7 +590,7 @@ export class CartDrawerComponent {
             // For variant products, ID is like: "productUUID-variantUUID-optionsUUID"
             const idParts = item.product.id.split('-');
             const baseProductId = idParts.slice(0, 5).join('-'); // First 5 segments = base product UUID
-            const productUrl = `${baseUrl}/${baseProductId}`;
+            const productUrl = item.product.shareUrl || `${baseUrl}/${baseProductId}`;
             return `• ${item.quantity}x ${item.product.title}%0A  ${currencySymbol}${item.product.price * item.quantity}%0A  🔗 ${productUrl}`;
         }).join('%0A%0A');
 
@@ -643,5 +655,34 @@ export class CartDrawerComponent {
         this.couponError = '';
         this.showCouponInput = false;
         this.selectedPaymentMethod = null;
+    }
+
+    getOpeningHoursText(): string {
+        const hours = this.tenantService.tenant()?.openingHours;
+        if (!hours) return '';
+        if (typeof hours === 'string') return hours;
+
+        // Handle object/array format
+        if (typeof hours === 'object') {
+            if (Array.isArray(hours)) {
+                // Map of English days to Spanish abbreviations
+                const dayNames: Record<string, string> = {
+                    'Monday': 'Lun', 'Tuesday': 'Mar', 'Wednesday': 'Mié',
+                    'Thursday': 'Jue', 'Friday': 'Vie', 'Saturday': 'Sáb', 'Sunday': 'Dom'
+                };
+
+                const schedules = hours
+                    .filter((h: any) => h.isOpen)
+                    .map((h: any) => `${dayNames[h.day] || h.day}: ${h.open} - ${h.close}`);
+
+                return schedules.length > 0 ? schedules.join(' | ') : 'Cerrado temporalmente';
+            }
+
+            if ('text' in (hours as any)) return (hours as any).text;
+
+            try { return JSON.stringify(hours); }
+            catch (e) { return String(hours); }
+        }
+        return String(hours);
     }
 }

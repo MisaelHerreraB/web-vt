@@ -12,13 +12,14 @@ import { HeaderCompactComponent } from '../components/headers/header-compact';
 import { HeaderOverlayComponent } from '../components/headers/header-overlay';
 import { HeaderMinimalComponent } from '../components/headers/header-minimal';
 import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-button';
+import { FooterComponent } from '../components/footer/footer.component';
 
 
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, CartSummaryComponent, CategoryNavComponent, HeaderCompactComponent, HeaderOverlayComponent, HeaderMinimalComponent, CartDrawerComponent, WhatsappButtonComponent],
+  imports: [CommonModule, RouterLink, CartSummaryComponent, CategoryNavComponent, HeaderCompactComponent, HeaderOverlayComponent, HeaderMinimalComponent, CartDrawerComponent, WhatsappButtonComponent, FooterComponent],
   // ... template unchanged ...
   template: `
     <div class="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20">
@@ -244,13 +245,8 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
       <!-- WhatsApp Floating Button -->
       <app-whatsapp-button [tenant]="tenant"></app-whatsapp-button>
 
-      <!-- reCAPTCHA compliance (required when badge is hidden) -->
-      <p class="text-center text-[10px] text-gray-300 py-4 px-4">
-        Este sitio está protegido por reCAPTCHA de Google.
-        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline hover:text-gray-400">Política de privacidad</a>
-        y
-        <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline hover:text-gray-400">Términos de servicio</a>.
-      </p>
+      <!-- Global Footer -->
+      <app-footer [tenant]="tenant"></app-footer>
     </div>
   `
 })

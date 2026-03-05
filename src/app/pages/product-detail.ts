@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 
 
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService, Product, ProductVariant } from '../services/product.service';
 import { TenantService, Tenant } from '../services/tenant.service';
@@ -13,11 +13,12 @@ import { CartDrawerComponent } from '../components/cart-drawer/cart-drawer.compo
 import { CartSummaryComponent } from '../components/cart-summary/cart-summary';
 import { FormatDescriptionPipe } from '../pipes/format-description.pipe';
 import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-button';
+import { FooterComponent } from '../components/footer/footer.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent, FormatDescriptionPipe, WhatsappButtonComponent],
+  imports: [CommonModule, RouterLink, FormsModule, CartDrawerComponent, CartSummaryComponent, FormatDescriptionPipe, WhatsappButtonComponent, FooterComponent],
   template: `
     <div class="min-h-screen bg-gray-50 font-sans text-gray-800 pb-32">
       <!-- Consistent Header with Home -->
@@ -556,13 +557,8 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
       <!-- WhatsApp Floating Button -->
       <app-whatsapp-button [tenant]="tenant"></app-whatsapp-button>
 
-      <!-- reCAPTCHA compliance (required when badge is hidden) -->
-      <p class="text-center text-[10px] text-gray-300 py-4 px-4">
-        Este sitio está protegido por reCAPTCHA de Google.
-        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline hover:text-gray-400">Política de privacidad</a>
-        y
-        <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline hover:text-gray-400">Términos de servicio</a>.
-      </p>
+      <!-- Global Footer -->
+      <app-footer [tenant]="tenant"></app-footer>
 
     </div>
   `,
@@ -637,6 +633,7 @@ export class ProductDetailComponent implements OnInit {
 
   cart = inject(CartService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private productService = inject(ProductService);
   private tenantService = inject(TenantService);
   private cdr = inject(ChangeDetectorRef);
@@ -704,6 +701,28 @@ export class ProductDetailComponent implements OnInit {
         this.selectedOptions = {};
         this.quantity = 1;
         this.currentImageIndex = 0;
+
+        // Auto-select variant and options from URL if shared
+        const variantId = this.route.snapshot.queryParams['v'];
+        const optsParam = this.route.snapshot.queryParams['opts'];
+
+        if (variantId && this.product.variants) {
+          const preselectedVariant = this.product.variants.find(v => v.id === variantId);
+          if (preselectedVariant) {
+            this.selectVariant(preselectedVariant);
+
+            if (optsParam) {
+              const optIds = optsParam.split(',');
+              const optionGroups = this.getOptionGroups(preselectedVariant);
+              optionGroups.forEach(group => {
+                const selectedItem = group.items.find((item: any) => optIds.includes(item.id));
+                if (selectedItem) {
+                  this.selectOptionGroup(group.groupKey, selectedItem);
+                }
+              });
+            }
+          }
+        }
 
         // Set Open Graph + Twitter meta tags for WhatsApp / social previews
         this.setOgTags();
@@ -1024,6 +1043,8 @@ export class ProductDetailComponent implements OnInit {
         }
       }
 
+      productToAdd.shareUrl = this.getShareUrl();
+
       this.cart.addWithQuantity(productToAdd, this.quantity);
 
       // Open drawer
@@ -1036,9 +1057,27 @@ export class ProductDetailComponent implements OnInit {
 
 
 
+  getShareUrl(): string {
+    if (!isPlatformBrowser(this.platformId)) return '';
+    const baseUrl = window.location.origin + window.location.pathname;
+
+    if (!this.selectedVariant) return baseUrl;
+
+    const params = new URLSearchParams();
+    params.set('v', this.selectedVariant.id);
+
+    const optKeys = Object.keys(this.selectedOptions);
+    if (optKeys.length > 0) {
+      const optIds = optKeys.map(k => this.selectedOptions[k].id).join(',');
+      params.set('opts', optIds);
+    }
+
+    return `${baseUrl}?${params.toString()}`;
+  }
+
   shareWhatsApp() {
     if (this.product) {
-      const url = window.location.href;
+      const url = this.getShareUrl();
       const text = `¡Mira este producto! ${this.product.title} - ${this.getSymbol(this.tenant?.currency)}${this.currentPrice}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
       window.open(whatsappUrl, '_blank');
@@ -1051,7 +1090,7 @@ export class ProductDetailComponent implements OnInit {
     if (!this.product || !this.tenant?.whatsapp && !this.tenant?.phone) return;
 
     const phone = this.tenant.whatsapp || this.tenant.phone;
-    const url = window.location.href;
+    const url = this.getShareUrl();
     const message = `Hola, estoy viendo el producto *${this.product.title}* y tengo algunas dudas. ¿Me podrían asesorar?\n\nLink: ${url}`;
 
     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -1062,7 +1101,7 @@ export class ProductDetailComponent implements OnInit {
     if (!this.product || !this.tenant?.whatsapp && !this.tenant?.phone) return;
 
     const phone = this.tenant.whatsapp || this.tenant.phone;
-    const url = window.location.href;
+    const url = this.getShareUrl();
     const currencySymbol = this.getSymbol(this.tenant.currency);
     const price = this.currentPrice;
 
@@ -1077,7 +1116,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   copyLink() {
-    const url = window.location.href;
+    const url = this.getShareUrl();
     navigator.clipboard.writeText(url).then(() => {
       this.linkCopied = true;
       setTimeout(() => {

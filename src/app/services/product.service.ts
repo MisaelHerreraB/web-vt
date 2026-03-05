@@ -43,6 +43,7 @@ export interface Product {
     ignoreStock?: boolean;
     urgencyOverride?: boolean;
     showStockQuantity?: boolean;
+    shareUrl?: string; // Specific URL including selected variant coordinates
 }
 
 @Injectable({
