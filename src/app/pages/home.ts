@@ -29,6 +29,7 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
           <app-header-overlay 
             [tenant]="tenant" 
             [slug]="slug"
+            [initialCategoryId]="categoryId"
             [searchQuery]="searchQuery"
             [onCategorySelected]="onCategorySelected.bind(this)"
             [onSearch]="onSearch.bind(this)"
@@ -41,6 +42,7 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
           <app-header-minimal 
             [tenant]="tenant" 
             [slug]="slug"
+            [initialCategoryId]="categoryId"
             [searchQuery]="searchQuery"
             [onCategorySelected]="onCategorySelected.bind(this)"
             [onSearch]="onSearch.bind(this)"
@@ -53,6 +55,7 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
           <app-header-compact 
             [tenant]="tenant" 
             [slug]="slug"
+            [initialCategoryId]="categoryId"
             [searchQuery]="searchQuery"
             [onCategorySelected]="onCategorySelected.bind(this)"
             [onSearch]="onSearch.bind(this)"
@@ -145,7 +148,7 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
         </div>
 
         <!-- Sticky Category Nav -->
-        <app-category-nav [slug]="slug" (categorySelected)="onCategorySelected($event)"></app-category-nav>
+        <app-category-nav [slug]="slug" [initialCategoryId]="categoryId" (categorySelected)="onCategorySelected($event)"></app-category-nav>
       </header>
 
       <main class="container mx-auto px-4 py-8 md:py-12">
@@ -263,6 +266,7 @@ export class HomeComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   searchQuery: string = '';
+  categoryId: string = '';
 
   private cdr = inject(ChangeDetectorRef);
 
@@ -274,15 +278,17 @@ export class HomeComponent implements OnInit {
         // Check for search query param within the same subscription flow to ensure slug is set
         this.route.queryParams.subscribe(queryParams => {
           const search = queryParams['search'];
+          const category = queryParams['category'];
           this.searchQuery = search || '';
-          this.loadData(search);
+          this.categoryId = category || '';
+          this.loadData(search, category);
         });
       }
     });
   }
 
-  loadData(searchQuery?: string) {
-    console.log('HomeComponent: Loading data for slug:', this.slug, 'search:', searchQuery);
+  loadData(searchQuery?: string, categoryId?: string) {
+    console.log('HomeComponent: Loading data for slug:', this.slug, 'search:', searchQuery, 'category:', categoryId);
 
     // Defensive check: If slug looks like an SVG path or has spaces, ignore it
     if (this.slug.includes(' ') || this.slug.length > 50) {
@@ -300,7 +306,7 @@ export class HomeComponent implements OnInit {
       this.tenant = cachedTenant;
       isCached = true;
       // Optimistic load: Load products immediately
-      this.loadProducts(undefined, searchQuery);
+      this.loadProducts(categoryId, searchQuery);
     }
 
     // 2. Refresh data in background (Stale-While-Revalidate)
@@ -316,7 +322,7 @@ export class HomeComponent implements OnInit {
         // If we DID have cached data, we can optionally reload products here to ensure freshness,
         // but since ProductService now has cache, it won't hit the network unless needed.
         // Let's reload to be safe and let the service handle the caching.
-        this.loadProducts(undefined, searchQuery);
+        this.loadProducts(categoryId, searchQuery);
       },
       error: (err) => {
         console.error('HomeComponent: Error loading tenant:', err);
@@ -340,6 +346,15 @@ export class HomeComponent implements OnInit {
   }
 
   onCategorySelected(categoryId: string | undefined) {
+    this.categoryId = categoryId || ''; // Update local state when user clicks manually
+
+    // Also update URL without reloading to reflect State
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { category: categoryId || null },
+      queryParamsHandling: 'merge'
+    });
+
     this.loadProducts(categoryId);
   }
 
@@ -361,7 +376,7 @@ export class HomeComponent implements OnInit {
       queryParams: { search: null },
       queryParamsHandling: 'merge'
     });
-    this.loadProducts(undefined, '');
+    this.loadProducts(this.categoryId || undefined, '');
   }
 
   addToCart(product: Product) {

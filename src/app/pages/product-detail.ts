@@ -1015,6 +1015,13 @@ export class ProductDetailComponent implements OnInit {
         productToAdd.title = `${this.product.title}${variantTitle}`;
         const optionsId = Object.values(this.selectedOptions).map((v: any) => v.id).join('-');
         productToAdd.id = `${this.product.id}-${this.selectedVariant.id}-${optionsId}`;
+
+        // Inject the specific image of the selected variant into the cart item
+        const variantImages = this.getProductImages();
+        if (variantImages && variantImages.length > 0) {
+          productToAdd.images = [variantImages[0]];
+          productToAdd.imageUrl = variantImages[0];
+        }
       }
 
       this.cart.addWithQuantity(productToAdd, this.quantity);

@@ -384,13 +384,11 @@ export class CartDrawerComponent {
     }
 
     removeItem(item: CartItem) {
-        if (confirm('¿Eliminar este producto?')) {
-            this.cart.removeFromCart(item.product.id);
-            if (this.cart.items().length === 0) {
-                this.removeCoupon();
-            } else if (this.couponService.appliedCoupon()) {
-                this.validateAppliedCoupon();
-            }
+        this.cart.removeFromCart(item.product.id);
+        if (this.cart.items().length === 0) {
+            this.removeCoupon();
+        } else if (this.couponService.appliedCoupon()) {
+            this.validateAppliedCoupon();
         }
     }
 

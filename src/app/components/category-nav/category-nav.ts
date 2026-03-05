@@ -104,6 +104,7 @@ import { finalize } from 'rxjs/operators';
 })
 export class CategoryNavComponent implements OnChanges {
   @Input() slug!: string;
+  @Input() initialCategoryId?: string;
   @Output() categorySelected = new EventEmitter<string | undefined>();
 
   categories: Category[] = [];
@@ -131,6 +132,17 @@ export class CategoryNavComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['slug'] && this.slug && this.tenantService.tenant()) {
       this.fetchCategories();
+    }
+
+    if (changes['initialCategoryId']) {
+      this.selectedId = this.initialCategoryId || null;
+      // Scroll to active category after view updates
+      setTimeout(() => {
+        const activeBtn = document.querySelector('.snap-start.active-cat');
+        if (activeBtn) {
+          activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }, 100);
     }
   }
 

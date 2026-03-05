@@ -139,7 +139,7 @@ import { CompactStickyNavComponent } from '../compact-sticky-nav/compact-sticky-
 
       <!-- Categories -->
       <div class="border-t border-gray-100">
-           <app-category-nav [slug]="slug" (categorySelected)="onCategorySelected($event)"></app-category-nav>
+           <app-category-nav [slug]="slug" [initialCategoryId]="initialCategoryId" (categorySelected)="onCategorySelected($event)"></app-category-nav>
       </div>
     </header>
   `
@@ -147,6 +147,7 @@ import { CompactStickyNavComponent } from '../compact-sticky-nav/compact-sticky-
 export class HeaderOverlayComponent {
     @Input() tenant: Tenant | null = null;
     @Input() slug: string = '';
+    @Input() initialCategoryId?: string;
     @Input() searchQuery: string = '';
     @Input() onCategorySelected!: (categoryId: string | undefined) => void;
     @Input() onSearch!: (event: any) => void;

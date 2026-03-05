@@ -37,7 +37,7 @@ interface Advisor {
 
               <!-- Advisor list -->
               <div class="divide-y divide-gray-50">
-                @for (advisor of advisors; track advisor.phone) {
+                @for (advisor of advisors; track $index) {
                   <button type="button"
                      (click)="openAdvisor(advisor)"
                      class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group cursor-pointer text-left">
