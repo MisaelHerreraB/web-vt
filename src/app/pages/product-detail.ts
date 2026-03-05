@@ -189,13 +189,25 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
                         @if (tenant?.wholesaleEnabled && tenant?.showRetailPriceLabel) {
                             <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Precio Minorista</span>
                         }
-                        <div class="flex items-baseline gap-4">
+                        <div class="flex items-center gap-4 flex-wrap">
                             <p class="text-3xl lg:text-4xl font-light text-gray-900">
                                 {{ currentPrice | currency : getSymbol(tenant?.currency) }}
                             </p>
                             @if (selectedVariant && currentPrice !== product.price) {
                                 <span class="text-sm text-gray-400 line-through">
                                     {{ product.price | currency : getSymbol(tenant?.currency) }}
+                                </span>
+                            }
+                            <!-- Stock status inline with price (Baymard best practice) -->
+                            @if (!isOutOfStock) {
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700">
+                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    En stock
+                                </span>
+                            } @else {
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    Agotado
                                 </span>
                             }
                         </div>
@@ -244,75 +256,112 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
 
                     <!-- Variants -->
                     @if (product.variants && product.variants.length > 0) {
-                        <div class="mb-6" id="variant-selector">
-                            <!-- Label row -->
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-xs font-bold uppercase text-gray-400 tracking-widest">Opción</h3>
-                                @if (showVariantAlert) {
-                                    <span class="text-xs font-semibold text-red-500 flex items-center gap-1 animate-fade-in">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        Selecciona una opción
-                                    </span>
-                                }
-                            </div>
+                        <div class="mb-6 space-y-5" id="variant-selector">
 
-                            <!-- Variant buttons -->
-                            <div class="flex flex-wrap gap-2"
-                                 [class.variant-shake]="showVariantAlert">
-                                @for (variant of product.variants; track variant.id) {
-                                    <button (click)="selectVariant(variant)"
-                                            class="relative h-10 px-5 rounded-md text-sm font-semibold transition-all duration-150 border-2 select-none"
-                                            [class.border-gray-900]="selectedVariant?.id === variant.id"
-                                            [class.text-gray-900]="selectedVariant?.id === variant.id"
-                                            [class.bg-white]="selectedVariant?.id === variant.id"
-                                            [class.border-gray-200]="selectedVariant?.id !== variant.id && !showVariantAlert"
-                                            [class.border-red-300]="showVariantAlert && selectedVariant?.id !== variant.id"
-                                            [class.text-gray-500]="selectedVariant?.id !== variant.id"
-                                            [class.bg-white]="selectedVariant?.id !== variant.id"
-                                            [class.hover:border-gray-400]="selectedVariant?.id !== variant.id"
-                                            [class.hover:text-gray-800]="selectedVariant?.id !== variant.id">
-                                        <!-- Selected checkmark dot -->
-                                        @if (selectedVariant?.id === variant.id) {
-                                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center shadow-sm">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                            </span>
+                            <!-- Alert row (global, shown once) -->
+                            @if (showVariantAlert) {
+                                <span class="text-xs font-semibold text-red-500 flex items-center gap-1 animate-fade-in">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    Selecciona una opción
+                                </span>
+                            }
+
+                            <!-- Variant groups (grouped by variant.name) -->
+                            @for (group of variantGroups; track group.name) {
+                                <div>
+                                    <!-- Group label row -->
+                                    <div class="flex items-center gap-2 mb-2.5">
+                                        <h3 class="text-xs font-bold uppercase text-gray-400 tracking-widest">{{ group.name }}</h3>
+                                        @if (selectedVariant && groupContainsSelected(group)) {
+                                            <span class="text-xs text-gray-600 font-medium">— {{ selectedVariant.value }}</span>
                                         }
-                                        {{ variant.value }}
-                                    </button>
-                                }
-                            </div>
-                        </div>
+                                    </div>
 
-                        <!-- Sub-options -->
-                        @if (selectedVariant?.options && selectedVariant!.options!.length > 0) {
-                            <div class="mb-6 space-y-5">
-                                @for (option of selectedVariant?.options; track option.id) {
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2.5">
-                                            <p class="text-xs font-bold uppercase text-gray-400 tracking-widest">{{ option.name }}</p>
-                                            @if (selectedOptions[option.name]) {
-                                                <span class="text-xs text-gray-600 font-medium">— {{ selectedOptions[option.name].name }}</span>
+                                    <!-- Buttons for this group — adapts to displayType -->
+                                    @if (group.variants[0]?.displayType === 'color') {
+                                        <!-- ● COLOR SWATCH MODE: circles with tooltip -->
+                                        <div class="flex flex-wrap gap-3"
+                                             [class.variant-shake]="showVariantAlert">
+                                            @for (variant of group.variants; track variant.id) {
+                                                <button (click)="selectVariant(variant)"
+                                                        [title]="variant.value"
+                                                        class="relative w-10 h-10 rounded-full transition-all duration-200 select-none focus:outline-none"
+                                                        [style.background]="variant.color || '#888888'"
+                                                        [class.ring-2]="selectedVariant?.id === variant.id"
+                                                        [class.ring-offset-2]="selectedVariant?.id === variant.id"
+                                                        [class.ring-gray-900]="selectedVariant?.id === variant.id"
+                                                        [class.scale-110]="selectedVariant?.id === variant.id"
+                                                        [class.ring-1]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                                        [class.ring-gray-200]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                                        [class.ring-red-300]="showVariantAlert && selectedVariant?.id !== variant.id"
+                                                        [class.hover:scale-105]="selectedVariant?.id !== variant.id">
+                                                    @if (selectedVariant?.id === variant.id) {
+                                                        <span class="absolute inset-0 flex items-center justify-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        </span>
+                                                    }
+                                                </button>
                                             }
                                         </div>
-                                        <div class="flex flex-wrap gap-2">
-                                            @for (val of option.values; track val.id) {
-                                                <button (click)="selectOption(option.name, val)"
-                                                        class="relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-150 border-2 select-none"
-                                                        [class.border-gray-900]="selectedOptions[option.name]?.id === val.id"
-                                                        [class.text-gray-900]="selectedOptions[option.name]?.id === val.id"
-                                                        [class.font-semibold]="selectedOptions[option.name]?.id === val.id"
-                                                        [class.border-gray-200]="selectedOptions[option.name]?.id !== val.id"
-                                                        [class.text-gray-500]="selectedOptions[option.name]?.id !== val.id"
-                                                        [class.hover:border-gray-400]="selectedOptions[option.name]?.id !== val.id"
-                                                        [class.hover:text-gray-800]="selectedOptions[option.name]?.id !== val.id">
-                                                    @if (selectedOptions[option.name]?.id === val.id) {
+                                    } @else {
+                                        <!-- ■ TEXT BUTTON MODE: existing pill buttons -->
+                                        <div class="flex flex-wrap gap-2"
+                                             [class.variant-shake]="showVariantAlert">
+                                            @for (variant of group.variants; track variant.id) {
+                                                <button (click)="selectVariant(variant)"
+                                                        class="relative h-10 px-5 rounded-md text-sm font-semibold transition-all duration-150 border-2 select-none"
+                                                        [class.border-gray-900]="selectedVariant?.id === variant.id"
+                                                        [class.text-gray-900]="selectedVariant?.id === variant.id"
+                                                        [class.bg-white]="selectedVariant?.id === variant.id"
+                                                        [class.border-gray-200]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                                        [class.border-red-300]="showVariantAlert && selectedVariant?.id !== variant.id"
+                                                        [class.text-gray-500]="selectedVariant?.id !== variant.id"
+                                                        [class.hover:border-gray-400]="selectedVariant?.id !== variant.id"
+                                                        [class.hover:text-gray-800]="selectedVariant?.id !== variant.id">
+                                                    @if (selectedVariant?.id === variant.id) {
                                                         <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center shadow-sm">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                                         </span>
                                                     }
-                                                    {{ val.name }}
-                                                    @if (val.price > 0) {
-                                                        <span class="ml-1 text-xs opacity-60">(+{{ val.price | currency: getSymbol(tenant?.currency) }})</span>
+                                                    {{ variant.value }}
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Sub-options -->
+                        @if (getOptionGroups(selectedVariant).length > 0) {
+                            <div class="mb-6 space-y-5">
+                                @for (group of getOptionGroups(selectedVariant); track group.groupKey) {
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2.5">
+                                            <p class="text-xs font-bold uppercase text-gray-400 tracking-widest">{{ group.groupName }}</p>
+                                            @if (selectedOptions[group.groupKey]) {
+                                                <span class="text-xs text-gray-600 font-medium">— {{ selectedOptions[group.groupKey].label }}</span>
+                                            }
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            @for (item of group.items; track item.id) {
+                                                <button (click)="selectOptionGroup(group.groupKey, item)"
+                                                        class="relative h-9 px-4 rounded-md text-sm font-medium transition-all duration-150 border-2 select-none"
+                                                        [class.border-gray-900]="selectedOptions[group.groupKey]?.id === item.id"
+                                                        [class.text-gray-900]="selectedOptions[group.groupKey]?.id === item.id"
+                                                        [class.font-semibold]="selectedOptions[group.groupKey]?.id === item.id"
+                                                        [class.border-gray-200]="selectedOptions[group.groupKey]?.id !== item.id"
+                                                        [class.text-gray-500]="selectedOptions[group.groupKey]?.id !== item.id"
+                                                        [class.hover:border-gray-400]="selectedOptions[group.groupKey]?.id !== item.id"
+                                                        [class.hover:text-gray-800]="selectedOptions[group.groupKey]?.id !== item.id">
+                                                    @if (selectedOptions[group.groupKey]?.id === item.id) {
+                                                        <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center shadow-sm">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        </span>
+                                                    }
+                                                    {{ item.label }}
+                                                    @if (item.price > 0) {
+                                                        <span class="ml-1 text-xs opacity-60">(+{{ item.price | currency: getSymbol(tenant?.currency) }})</span>
                                                     }
                                                 </button>
                                             }
@@ -325,62 +374,51 @@ import { WhatsappButtonComponent } from '../components/whatsapp-button/whatsapp-
 
 
                     <!-- Actions Area -->
-                    <div class="space-y-4 mb-4">
-                         <!-- Quantity Selector (Simplified) -->
-                        <div class="flex items-center gap-4">
-                             <div class="flex items-center border border-gray-200 rounded-full h-12 w-32 px-2 bg-white">
+                    <div class="space-y-3 mb-4">
+                        <!-- Single row: Quantity + CTA + Stock -->
+                        <div class="flex items-center gap-3">
+                            <!-- Quantity Selector -->
+                            <div class="flex items-center border border-gray-200 rounded-full h-12 w-32 px-2 bg-white flex-shrink-0">
                                 <button (click)="decreaseQuantity()" class="w-8 h-full flex items-center justify-center text-gray-500 hover:text-black">-</button>
                                 <input type="number" [(ngModel)]="quantity" class="flex-1 w-full text-center font-bold text-gray-900 border-none focus:outline-none p-0" min="1" readonly>
                                 <button (click)="increaseQuantity()" class="w-8 h-full flex items-center justify-center text-gray-500 hover:text-black">+</button>
-                             </div>
-                             
-                             <!-- Stock Status Badge (UX Best Practice) -->
-                             @if (!isOutOfStock) {
-                                <span class="text-xs text-green-700 font-bold bg-green-100 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Disponible
-                                </span>
-                             } @else {
-                                <span class="text-xs text-red-700 font-bold bg-red-100 px-3 py-1.5 rounded-full border border-red-200 flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                    Agotado
-                                </span>
-                             }
+                            </div>
+
+                            <!-- Main CTA Button (grows to fill space) -->
+                            <button (click)="addToCart()"
+                                    [disabled]="isOutOfStock"
+                                    [class.bg-gray-300]="isOutOfStock"
+                                    [class.border-gray-300]="isOutOfStock"
+                                    [class.text-gray-400]="isOutOfStock"
+                                    [class.cursor-not-allowed]="isOutOfStock"
+                                    [class.bg-gray-900]="!isOutOfStock"
+                                    [class.text-white]="!isOutOfStock"
+                                    [class.hover:bg-black]="!isOutOfStock"
+                                    [class.hover:shadow-xl]="!isOutOfStock"
+                                    class="flex-1 h-12 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
+                                @if (isOutOfStock) {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    <span>Agotado</span>
+                                } @else {
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                    <span>Agregar al carrito</span>
+                                }
+                            </button>
                         </div>
 
-                        <!-- Main Action Button -->
-                        <button (click)="addToCart()" 
-                                [disabled]="isOutOfStock"
-                                [class.bg-gray-300]="isOutOfStock"
-                                [class.border-gray-300]="isOutOfStock"
-                                [class.text-gray-400]="isOutOfStock"
-                                [class.cursor-not-allowed]="isOutOfStock"
-                                [class.bg-gray-900]="!isOutOfStock"
-                                [class.text-white]="!isOutOfStock"
-                                [class.hover:bg-black]="!isOutOfStock"
-                                [class.hover:shadow-xl]="!isOutOfStock"
-                                class="w-full py-4 rounded-full font-bold uppercase tracking-[0.1em] text-sm transition-all active:scale-[0.98] disabled:opacity-60 shadow-lg shadow-gray-200 flex items-center justify-center gap-2">
-                            @if (isOutOfStock) {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                <span>Agotado</span>
-                            } @else {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                                <span>Agregar al carrito</span>
-                            }
-                        </button>
-
-                        <!-- WhatsApp Consultation Block (UX Highlight) -->
-                        <button (click)="consultWhatsApp()" 
-                                class="w-full mt-4 bg-green-50 hover:bg-green-100 border border-green-100 text-green-800 rounded-xl p-4 flex items-center justify-center gap-3 transition-colors group">
-                            <div class="bg-white p-2 rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                            </div>
-                            <div class="text-left">
-                                <p class="text-sm font-bold text-gray-900">¿Tienes dudas sobre este producto?</p>
-                                <p class="text-xs text-green-700 font-medium">Chatea con un asesor experto ahora</p>
-                            </div>
-                        </button>
                     </div>
+
+                    <!-- WhatsApp Consultation Block (UX Highlight) -->
+                    <button (click)="consultWhatsApp()"
+                            class="w-full mt-4 bg-green-50 hover:bg-green-100 border border-green-100 text-green-800 rounded-xl p-4 flex items-center justify-center gap-3 transition-colors group">
+                        <div class="bg-white p-2 rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm font-bold text-gray-900">¿Tienes dudas sobre este producto?</p>
+                            <p class="text-xs text-green-700 font-medium">Chatea con un asesor experto ahora</p>
+                        </div>
+                    </button>
 
                     <!-- Trust Badges (Moved Here) -->
                     <div class="mb-8 grid grid-cols-2 gap-3 pb-8 border-b border-gray-100">
@@ -642,10 +680,22 @@ export class ProductDetailComponent implements OnInit {
         this.product = productData;
 
         // Sort variants and nested options by saved order (defensive — API already sorts, but guarantees client-side too)
+        // Also normalize imageIndexes: TypeORM 'simple-array' returns strings, we need numbers.
         if (this.product?.variants) {
           this.product.variants.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
           this.product.variants.forEach((v: any) => {
-            if (v.options) v.options.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+            // Fix: simple-array returns strings — parse to numbers
+            if (v.imageIndexes) {
+              v.imageIndexes = v.imageIndexes
+                .map((i: any) => Number(i))
+                .filter((i: number) => !isNaN(i));
+            }
+            if (v.options) {
+              v.options.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+              v.options.forEach((o: any) => {
+                if (o.values) o.values.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+              });
+            }
           });
         }
 
@@ -721,6 +771,79 @@ export class ProductDetailComponent implements OnInit {
   // Selected sub-options state
   selectedOptions: { [optionName: string]: any } = {};
 
+  // Computes variant groups: groups variants by their 'name' field for display.
+  get variantGroups(): { name: string; variants: ProductVariant[] }[] {
+    if (!this.product?.variants) return [];
+    const groups: { name: string; variants: ProductVariant[] }[] = [];
+    const seen = new Map<string, number>();
+    for (const v of this.product.variants) {
+      const key = v.name || 'Opción';
+      if (seen.has(key)) {
+        groups[seen.get(key)!].variants.push(v);
+      } else {
+        seen.set(key, groups.length);
+        groups.push({ name: key, variants: [v] });
+      }
+    }
+    return groups;
+  }
+
+  // Returns true if the currently selectedVariant is in the given group.
+  groupContainsSelected(group: { name: string; variants: ProductVariant[] }): boolean {
+    if (!this.selectedVariant) return false;
+    return group.variants.some(v => v.id === this.selectedVariant!.id);
+  }
+
+  // Normalized option group for rendering in the template.
+  // Handles two storage patterns:
+  //   Pattern A: { name:"Talla", values:[{name:"S"},{name:"M"},{name:"L"}] }
+  //   Pattern B: { name:"S", values:[{name:""}] }, {name:"M",...}, {name:"L",...}
+  //              (option.name IS the value, values array has empty entries)
+  // Returns a unified array of { groupName, groupKey, items[] } objects.
+  getOptionGroups(variant: ProductVariant | null): { groupName: string; groupKey: string; items: { id: string; label: string; price: number }[] }[] {
+    if (!variant?.options || variant.options.length === 0) return [];
+
+    const patternAOptions: any[] = [];
+    const patternBItems: { id: string; label: string; price: number }[] = [];
+
+    for (const opt of variant.options) {
+      const hasRealValues = opt.values?.some((v: any) => v.name?.trim());
+
+      if (hasRealValues) {
+        // Pattern A: option group with real values
+        patternAOptions.push(opt);
+      } else if (opt.name?.trim()) {
+        // Pattern B: option name itself is the selectable value
+        patternBItems.push({
+          id: opt.id,
+          label: opt.name.trim(),
+          price: 0
+        });
+      }
+    }
+
+    const result: { groupName: string; groupKey: string; items: { id: string; label: string; price: number }[] }[] = [];
+
+    // Add Pattern B group first (if any) as a "Talla" group
+    if (patternBItems.length > 0) {
+      result.push({ groupName: 'Talla', groupKey: '__talla__', items: patternBItems });
+    }
+
+    // Add Pattern A groups
+    for (const opt of patternAOptions) {
+      const items = opt.values
+        .filter((v: any) => v.name?.trim())
+        .map((v: any) => ({ id: v.id, label: v.name.trim(), price: Number(v.price) || 0 }));
+      if (items.length > 0) {
+        result.push({ groupName: opt.name, groupKey: opt.id, items });
+      }
+    }
+
+    return result;
+  }
+
+
+
   get currentPrice(): number {
     if (!this.product) return 0;
 
@@ -795,6 +918,14 @@ export class ProductDetailComponent implements OnInit {
     if (this.variantAlertTimer) { clearTimeout(this.variantAlertTimer); }
   }
 
+  // Used by the normalized getOptionGroups() template — stores selection keyed by groupKey.
+  selectOptionGroup(groupKey: string, item: { id: string; label: string; price: number }) {
+    this.selectedOptions[groupKey] = item;
+    this.showVariantAlert = false;
+    if (this.variantAlertTimer) { clearTimeout(this.variantAlertTimer); }
+    this.cdr.detectChanges();
+  }
+
   triggerVariantAlert() {
     // Scroll to the variant selector
     if (isPlatformBrowser(this.platformId)) {
@@ -851,10 +982,11 @@ export class ProductDetailComponent implements OnInit {
         return;
       }
 
-      // Validate sub-options
-      if (this.selectedVariant && this.selectedVariant.options) {
-        for (const option of this.selectedVariant.options) {
-          if (!this.selectedOptions[option.name]) {
+      // Validate sub-options: use getOptionGroups() groupKeys — same keys used by selectOptionGroup()
+      if (this.selectedVariant) {
+        const optionGroups = this.getOptionGroups(this.selectedVariant);
+        for (const group of optionGroups) {
+          if (!this.selectedOptions[group.groupKey]) {
             this.triggerVariantAlert();
             return;
           }
@@ -872,17 +1004,15 @@ export class ProductDetailComponent implements OnInit {
       if (this.selectedVariant) {
         variantTitle = ` (${this.selectedVariant.value}`;
 
-        // Append selected options to title
+        // Append selected options to title — selectedOptions values have shape {id, label, price}
         const optionKeys = Object.keys(this.selectedOptions);
         if (optionKeys.length > 0) {
-          const optionsStr = optionKeys.map(key => `${key}: ${this.selectedOptions[key].name}`).join(', ');
+          const optionsStr = optionKeys.map(key => this.selectedOptions[key].label).join(', ');
           variantTitle += ` - ${optionsStr}`;
         }
         variantTitle += ')';
 
         productToAdd.title = `${this.product.title}${variantTitle}`;
-        // Generate a pseudo-unique ID based on variant and options 
-        // Note: For a robust cart, we should store option IDs, but for this simple version string concat is fine
         const optionsId = Object.values(this.selectedOptions).map((v: any) => v.id).join('-');
         productToAdd.id = `${this.product.id}-${this.selectedVariant.id}-${optionsId}`;
       }

@@ -55,9 +55,10 @@ import { Tenant } from '../../services/tenant.service';
                   class="flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded-lg px-3 md:px-4 py-2 md:py-2.5 hover:bg-gray-200 transition-colors"
                   title="Información de la tienda">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4"/>
-              <path d="M12 8h.01"/>
+              <path d="M3 9l1-6h16l1 6"/>
+              <path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/>
+              <path d="M5 11v9h14v-9"/>
+              <path d="M9 21v-6h6v6"/>
             </svg>
             <span class="text-xs md:text-sm font-medium hidden lg:inline">Info</span>
           </button>

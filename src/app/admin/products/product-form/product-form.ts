@@ -28,6 +28,8 @@ interface VariantDraft {
     order?: number;
     imageIndexes?: number[]; // Indexes of images assigned to this variant
     options?: VariantOptionDraft[]; // Nested options
+    displayType?: 'button' | 'color'; // 'button' = text button, 'color' = color swatch
+    color?: string; // Hex color for swatch, e.g. "#1A56DB"
 }
 
 @Component({
@@ -285,6 +287,63 @@ interface VariantDraft {
                                     <label class="block text-xs font-bold text-gray-500 mb-1">Stock</label>
                                     <input type="number" [(ngModel)]="variant.stock" [name]="'v_st_'+variantIndex" class="w-full px-3 py-2 rounded border border-gray-300 text-sm">
                                 </div>
+                            </div>
+
+                            <!-- Display Style Selector -->
+                            <div class="border border-gray-200 rounded-lg p-3 bg-white">
+                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Estilo de Visualización</label>
+                                <div class="flex items-center gap-3">
+                                    <!-- Toggle buttons -->
+                                    <div class="inline-flex rounded-lg border border-gray-200 p-0.5 bg-gray-50">
+                                        <button type="button"
+                                                (click)="variant.displayType = 'button'"
+                                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                                                [class.bg-white]="variant.displayType !== 'color'"
+                                                [class.text-gray-900]="variant.displayType !== 'color'"
+                                                [class.shadow-sm]="variant.displayType !== 'color'"
+                                                [class.text-gray-400]="variant.displayType === 'color'">
+                                            <span class="flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="3"/></svg>
+                                                Botón de texto
+                                            </span>
+                                        </button>
+                                        <button type="button"
+                                                (click)="variant.displayType = 'color'"
+                                                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                                                [class.bg-white]="variant.displayType === 'color'"
+                                                [class.text-gray-900]="variant.displayType === 'color'"
+                                                [class.shadow-sm]="variant.displayType === 'color'"
+                                                [class.text-gray-400]="variant.displayType !== 'color'">
+                                            <span class="flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                                                Círculo de color
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Color picker (only when color mode) -->
+                                    @if (variant.displayType === 'color') {
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-xs text-gray-500">Color:</label>
+                                            <div class="relative flex items-center">
+                                                <!-- Visual circle preview -->
+                                                <div class="w-8 h-8 rounded-full border-2 border-gray-200 shadow-inner cursor-pointer overflow-hidden"
+                                                     [style.background]="variant.color || '#000000'">
+                                                    <input type="color"
+                                                           [(ngModel)]="variant.color"
+                                                           [name]="'v_color_'+variantIndex"
+                                                           class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
+                                                </div>
+                                                <span class="ml-2 text-xs font-mono text-gray-500">{{ variant.color || '#000000' }}</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (variant.displayType === 'color') {
+                                    <p class="text-[10px] text-gray-400 mt-2">💡 El cliente verá un círculo de este color. El nombre (valor) aparece como tooltip al pasar el cursor.</p>
+                                } @else {
+                                    <p class="text-[10px] text-gray-400 mt-2">El cliente verá un botón con el texto del valor de la variante.</p>
+                                }
                             </div>
 
                             <!-- Image Selection for Variant -->
@@ -602,7 +661,7 @@ export class ProductFormComponent implements OnInit {
     }
 
     addVariant() {
-        this.variants.push({ name: 'Talla', value: '', price: 0, stock: 0, order: this.variants.length });
+        this.variants.push({ name: 'Talla', value: '', price: 0, stock: 0, order: this.variants.length, displayType: 'button', color: '#000000' });
     }
 
     removeVariant(index: number) {

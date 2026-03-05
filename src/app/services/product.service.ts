@@ -25,6 +25,8 @@ export interface ProductVariant {
     stock: number;
     imageIndexes?: number[];
     options?: VariantOption[];
+    color?: string;          // Hex color for swatch, e.g. "#FF5733"
+    displayType?: 'button' | 'color'; // 'button' = text button, 'color' = color swatch
 }
 
 export interface Product {

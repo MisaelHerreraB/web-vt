@@ -99,7 +99,7 @@ import { CompactStickyNavComponent } from '../compact-sticky-nav/compact-sticky-
 
               <!-- Cart -->
               <button (click)="onInfoClick()" class="relative bg-gray-100 text-gray-600 rounded-lg px-2.5 py-2.5 hover:bg-gray-200 transition-colors flex items-center gap-2" title="Información">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/><path d="M5 11v9h14v-9"/><path d="M9 21v-6h6v6"/></svg>
                   <span class="text-sm font-medium hidden md:inline">Info</span>
               </button>
               <button (click)="cart.open()" class="relative bg-terra text-white rounded-lg px-4 py-2.5 hover:bg-gray-900 transition-colors flex items-center gap-2">

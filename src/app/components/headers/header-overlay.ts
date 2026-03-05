@@ -101,7 +101,7 @@ import { CompactStickyNavComponent } from '../compact-sticky-nav/compact-sticky-
 
                      <!-- Store Info -->
                      <button (click)="onInfoClick()" class="flex items-center gap-2 bg-white/20 backdrop-blur text-white rounded-full px-3 py-2.5 border border-white/30 hover:bg-white/30 transition-colors mr-2" title="Información de la tienda">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/><path d="M5 11v9h14v-9"/><path d="M9 21v-6h6v6"/></svg>
                         <span class="hidden lg:inline text-sm font-medium">Info</span>
                      </button>
                      <button (click)="cart.open()" class="relative bg-white/20 backdrop-blur text-white rounded-full p-2.5 border border-white/30 hover:bg-white/30 transition-colors">
@@ -126,7 +126,7 @@ import { CompactStickyNavComponent } from '../compact-sticky-nav/compact-sticky-
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3 top-2.5 text-gray-400"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <button (click)="onInfoClick()" class="flex items-center gap-1.5 bg-gray-100 text-gray-700 rounded-full px-3 py-2 hover:bg-gray-200 transition-colors" title="Info de la tienda">
-             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-6h16l1 6"/><path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/><path d="M5 11v9h14v-9"/><path d="M9 21v-6h6v6"/></svg>
              <span class="text-xs font-medium">Info</span>
           </button>
           <button (click)="cart.open()" class="relative bg-terra text-white rounded-full p-2.5">
