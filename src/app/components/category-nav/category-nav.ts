@@ -11,7 +11,7 @@ import { finalize } from 'rxjs/operators';
   imports: [CommonModule],
   template: `
     <div class="relative z-[5] bg-white/95 backdrop-blur-sm shadow-sm overflow-hidden border-b border-gray-100">
-      <div class="container mx-auto px-1 sm:px-4 py-4 overflow-x-auto no-scrollbar flex justify-start md:justify-center gap-4 sm:gap-6 snap-x items-start min-h-[120px]">
+      <div class="container mx-auto px-1 sm:px-4 py-4 overflow-x-auto no-scrollbar flex justify-start lg:justify-center gap-4 sm:gap-6 snap-x items-start min-h-[120px]">
         
         <!-- Skeleton Loading -->
         @if (loading) {

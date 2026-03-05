@@ -36,12 +36,12 @@ import { FooterComponent } from '../components/footer/footer.component';
             <span class="hidden md:inline-block font-bold text-gray-900 text-lg">{{ tenant?.name || slug }}</span>
           </a>
 
-          <!-- Search Bar (Desktop) -->
-          <div class="hidden md:flex flex-1 max-w-md">
+          <!-- Search Bar (visible on all screens) -->
+          <div class="flex flex-1 max-w-md">
             <input type="text" 
-                   placeholder="Buscar productos..." 
+                   placeholder="Buscar..." 
                    (keyup.enter)="onSearch($event)"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-terra">
+                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:border-terra">
           </div>
 
           <!-- Mini Cart -->
@@ -725,6 +725,7 @@ export class ProductDetailComponent implements OnInit {
         }
 
         // Set Open Graph + Twitter meta tags for WhatsApp / social previews
+        // Must be called AFTER variant pre-selection so variant image is used
         this.setOgTags();
 
         this.cdr.detectChanges();
@@ -748,15 +749,35 @@ export class ProductDetailComponent implements OnInit {
 
     const title = this.product.title;
     const description = (this.product.description || title).replace(/<[^>]*>/g, '').slice(0, 160);
-    const image = this.product.images?.[0] || (this.product as any).imageUrl || '';
-    const url = `https://www.vertienda.app/${this.slug}/p/${this.product.id}`;
+
+    // Resolve the best image: prefer selected variant's first assigned image, otherwise product's first image
+    let image = this.product.images?.[0] || (this.product as any).imageUrl || '';
+    if ((this as any).selectedVariant) {
+      const variant = (this as any).selectedVariant;
+      const productImages = this.product.images || [];
+      // Use first image from variant's imageIndexes if available
+      if (variant.imageIndexes?.length > 0) {
+        const imgIndex = variant.imageIndexes[0];
+        if (productImages[imgIndex]) {
+          image = productImages[imgIndex];
+        }
+      }
+    }
+
+    // Include the variant param in the canonical URL if a variant is selected
+    const variantParam = (this as any).selectedVariant ? `?v=${(this as any).selectedVariant.id}` : '';
+    const url = `https://www.vertienda.app/${this.slug}/p/${this.product.id}${variantParam}`;
+
+    // Append variant name to title for clearer share previews
+    const variantLabel = (this as any).selectedVariant ? ` – ${(this as any).selectedVariant.value}` : '';
+    const shareTitle = `${title}${variantLabel}`;
 
     // Page title
-    this.titleService.setTitle(title);
+    this.titleService.setTitle(shareTitle);
 
     // Open Graph tags (Facebook, WhatsApp, LinkedIn, Telegram)
     this.meta.updateTag({ property: 'og:type', content: 'product' });
-    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:title', content: shareTitle });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:image', content: image });
     this.meta.updateTag({ property: 'og:image:width', content: '800' });
@@ -766,7 +787,7 @@ export class ProductDetailComponent implements OnInit {
 
     // Twitter / WhatsApp fallback
     this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:title', content: shareTitle });
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.meta.updateTag({ name: 'twitter:image', content: image });
 
