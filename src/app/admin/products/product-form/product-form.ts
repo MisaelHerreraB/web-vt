@@ -330,7 +330,7 @@ interface VariantGroupDraft {
                                                 <div class="flex flex-col">
                                                     <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Color</label>
                                                     <div class="relative flex items-center gap-1">
-                                                        <div class="w-8 h-8 rounded-full border-2 border-gray-200 shadow-inner cursor-pointer overflow-hidden"
+                                                        <div class="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm cursor-pointer overflow-hidden"
                                                              [style.background]="val.color || '#000000'">
                                                             <input type="color"
                                                                    [(ngModel)]="val.color"

@@ -293,7 +293,8 @@ import { FooterComponent } from '../components/footer/footer.component';
                                                         [class.ring-gray-900]="selectedVariant?.id === variant.id"
                                                         [class.scale-110]="selectedVariant?.id === variant.id"
                                                         [class.ring-1]="selectedVariant?.id !== variant.id && !showVariantAlert"
-                                                        [class.ring-gray-200]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                                        [class.ring-gray-300]="selectedVariant?.id !== variant.id && !showVariantAlert"
+                                                        [class.shadow-sm]="selectedVariant?.id !== variant.id"
                                                         [class.ring-red-300]="showVariantAlert && selectedVariant?.id !== variant.id"
                                                         [class.hover:scale-105]="selectedVariant?.id !== variant.id">
                                                     @if (selectedVariant?.id === variant.id) {
