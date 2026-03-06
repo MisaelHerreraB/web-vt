@@ -14,7 +14,7 @@ import { finalize } from 'rxjs/operators';
       <div class="container mx-auto px-1 sm:px-4 py-4 overflow-x-auto no-scrollbar flex justify-start lg:justify-center gap-4 sm:gap-6 snap-x items-start min-h-[120px]">
         
         <!-- Skeleton Loading -->
-        @if (loading) {
+        @if (loading && categories.length === 0) {
             @for (item of [1,2,3,4,5]; track item) {
                 <div class="flex flex-col items-center gap-2 shrink-0 animate-pulse">
                     <div class="w-[72px] h-[72px] rounded-full bg-gray-200"></div>

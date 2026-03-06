@@ -19,7 +19,7 @@ interface Advisor {
         <div class="fixed inset-0 z-40" (click)="open = false"></div>
       }
 
-      <div class="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3">
+      <div class="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3 pointer-events-none">
 
         <!-- Advisor popup panel -->
         @if (advisors.length > 1) {
@@ -68,7 +68,7 @@ interface Advisor {
         <button
           type="button"
           (click)="onButtonClick()"
-          class="relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95"
+          class="relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 pointer-events-auto"
           style="background-color: #25D366;"
           [attr.aria-label]="advisors.length === 1 ? 'Contactar por WhatsApp' : 'Ver asesores de WhatsApp'">
 

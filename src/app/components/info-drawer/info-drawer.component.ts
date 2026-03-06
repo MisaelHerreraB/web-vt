@@ -10,15 +10,15 @@ import { Tenant } from '../../services/tenant.service';
     template: `
     @if (isOpen()) {
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 transition-opacity"
+        <div class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] transition-opacity"
              (click)="close()">
         </div>
 
         <!-- Drawer Panel -->
-        <div class="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 flex flex-col h-full animate-slide-in-left">
+        <div class="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-2xl z-[60] transform transition-transform duration-300 flex flex-col h-full animate-slide-in-left">
             
             <!-- Header -->
-            <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-white sticky top-0 z-10">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-white sticky top-0 z-50 relative">
                 <h2 class="text-xl font-bold text-gray-900">Información</h2>
                 <button (click)="close()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -26,7 +26,7 @@ import { Tenant } from '../../services/tenant.service';
             </div>
 
             <!-- Content -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+            <div class="flex-1 overflow-y-auto p-6 pb-24 space-y-8">
                 
                 <!-- Branding -->
                 <div class="text-center">
